@@ -1,4 +1,7 @@
 # Figures from the Elements of Statistical Learning
-Recreating all figure from the textbook The Elements of Statistical Learning (2nd edition) by Trevor Hastie, Robert Tibshirani, and Jerome Friedman.
+Recreating all figures from the textbook The Elements of Statistical Learning (2nd edition) by Trevor Hastie, Robert Tibshirani, and Jerome Friedman.
 
-https://web.stanford.edu/~hastie/ElemStatLearn/
+See https://web.stanford.edu/~hastie/ElemStatLearn/ where you can get a PDF of the book.
+
+## How to render R Markdown on github
+https://stackoverflow.com/questions/39814916/how-can-i-see-output-of-rmd-in-github
