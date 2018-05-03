@@ -3,5 +3,5 @@ Recreating all figures from the textbook The Elements of Statistical Learning (2
 
 See https://web.stanford.edu/~hastie/ElemStatLearn/ where you can get a PDF of the book.
 
-## How to render R Markdown on github
+## How to render R Markdown for github
 https://stackoverflow.com/questions/39814916/how-can-i-see-output-of-rmd-in-github
