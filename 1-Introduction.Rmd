@@ -1,0 +1,27 @@
+---
+title: "Chapter 1: Introduction"
+author: "Bodo Burger"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Example 1: Email Spam
+
+## Table 1.1
+
+*skipped for now*
+
+# Example 2: Prostate Cancer
+
+## Figure 1.1 Scatterplot matrix of prostate cancer data
+
+```{r, fig.asp=1}
+df = ElemStatLearn::prostate
+
+pairs(df[, c("lpsa", "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", "pgg45")],
+      col = "blueviolet", cex = .5, cex.axis = .5)
+```
+

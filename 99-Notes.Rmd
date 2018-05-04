@@ -1,0 +1,13 @@
+---
+title: "Notes"
+author: "Bodo Burger"
+date: "May 4, 2018"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+- color names in R: http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
+- R graph gallery: https://www.r-graph-gallery.com/
