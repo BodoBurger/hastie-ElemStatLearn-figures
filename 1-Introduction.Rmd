@@ -6,22 +6,54 @@ output: rmarkdown::github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ElemStatLearn)
 ```
 
-# Example 1: Email Spam
+# Examples of learning problems
 
-## Table 1.1
+## Table 1.1. Spam data
 
 *skipped for now*
 
-# Example 2: Prostate Cancer
+## Figure 1.1. Scatterplot matrix of prostate cancer data
 
-## Figure 1.1 Scatterplot matrix of prostate cancer data
+```{r Prostate,fig.asp=1}
+df.prostate = ElemStatLearn::prostate
 
-```{r, fig.asp=1}
-df = ElemStatLearn::prostate
-
-pairs(df[, c("lpsa", "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", "pgg45")],
+pairs(df.prostate[, c("lpsa", "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", "pgg45")],
       col = "blueviolet", cex = .5, cex.axis = .5)
 ```
+
+
+## Figure 1.2. Examples of handwritten digits from U.S. postal envelopes
+
+```{r Zip-data, message=FALSE, warning=FALSE, include=FALSE}
+# The following code is taken from the help file of the zip.train dataset
+# from the R package ElemStatLearn
+findRows <- function(zip, n) {
+  # Find  n (random) rows with zip representing 0,1,2,...,9
+  res = vector(length = 10, mode = "list")
+  names(res) = 0:9
+  ind = zip[,1]
+  for (j in 0:9) {
+    res[[j + 1]] = sample(which(ind == j), n) 
+  }
+  return(res)
+}
+
+digits = vector(length = 10, mode = "list")
+names(digits) = 0:9
+rows = findRows(zip.train, 6)
+for (j in 0:9) {
+    digits[[j+1]] = do.call("cbind", lapply(as.list(rows[[j+1]]), 
+                            function(x) zip2image(zip.train, x)))
+}
+im = do.call("rbind", digits)
+```
+
+```{r Zip-plot, echo=FALSE}
+image(im, col = gray(256:0/256), zlim = c(0,1), xaxt = 'n', yaxt = 'n')
+```
+
+
 

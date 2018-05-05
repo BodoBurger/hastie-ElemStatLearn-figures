@@ -2,25 +2,27 @@ Chapter 1: Introduction
 ================
 Bodo Burger
 
-Example 1: Email Spam
-=====================
+Examples of learning problems
+=============================
 
-Table 1.1
----------
+Table 1.1. Spam data
+--------------------
 
 *skipped for now*
 
-Example 2: Prostate Cancer
-==========================
-
-Figure 1.1 Scatterplot matrix of prostate cancer data
------------------------------------------------------
+Figure 1.1. Scatterplot matrix of prostate cancer data
+------------------------------------------------------
 
 ``` r
-df = ElemStatLearn::prostate
+df.prostate = ElemStatLearn::prostate
 
-pairs(df[, c("lpsa", "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", "pgg45")],
+pairs(df.prostate[, c("lpsa", "lcavol", "lweight", "age", "lbph", "svi", "lcp", "gleason", "pgg45")],
       col = "blueviolet", cex = .5, cex.axis = .5)
 ```
 
-![](1-Introduction_files/figure-markdown_github/unnamed-chunk-1-1.png)
+![](1-Introduction_files/figure-markdown_github/Prostate-1.png)
+
+Figure 1.2. Examples of handwritten digits from U.S. postal envelopes
+---------------------------------------------------------------------
+
+![](1-Introduction_files/figure-markdown_github/Zip-plot-1.png)
