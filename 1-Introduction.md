@@ -20,12 +20,12 @@ pairs(df.prostate[, c("lpsa", "lcavol", "lweight", "age", "lbph", "svi", "lcp", 
       col = "blueviolet", cex = .5, cex.axis = .5)
 ```
 
-![](1-Introduction_files/figure-markdown_github/Prostate-1.png)
+![](figures/figure-1.1-prostate-1.png)
 
 Figure 1.2. Examples of handwritten digits from U.S. postal envelopes
 ---------------------------------------------------------------------
 
-![](1-Introduction_files/figure-markdown_github/Zip-plot-1.png)
+![](figures/figure-1.2-zip-1.png)
 
 Figure 1.3. DNA microarray data
 -------------------------------
@@ -38,6 +38,6 @@ heatmap(df.nci[sample(nrow(df.nci), 100), ], Colv = NA, Rowv = NA, scale = "row"
         cexRow = .5, cexCol = .5, col = colorRampPalette(rev(c("green", "black", "red")))(15))
 ```
 
-![](1-Introduction_files/figure-markdown_github/NCI-1.png)
+![](figures/figure-1.3-nci-1.png)
 
 There are no grey cells representing missing values because these have already imputed and the names of the genes (rows) are not available.
