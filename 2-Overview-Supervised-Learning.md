@@ -4,10 +4,10 @@ Bodo Burger
 2018-05
 
 -   [Linear Model](#linear-model)
-    -   [Figure 2.1. Classification using linear regression](#figure-2.1.-classification-using-linear-regression)
+    -   [Figure 2-1 Classification using linear regression](#figure-2-1-classification-using-linear-regression)
 -   [Nearest-Neighbors Method](#nearest-neighbors-method)
-    -   [Figure 2.2 Classification using 15-nearest-neighbors](#figure-2.2-classification-using-15-nearest-neighbors)
-    -   [Figure 2.3 Classification using 1-nearest-neighbor](#figure-2.3-classification-using-1-nearest-neighbor)
+    -   [Figure 2-2 Classification using 15-nearest-neighbors](#figure-2-2-classification-using-15-nearest-neighbors)
+    -   [Figure 2-3 Classification using 1-nearest-neighbor](#figure-2-3-classification-using-1-nearest-neighbor)
 -   [Sources](#sources)
 
 ``` r
@@ -74,8 +74,8 @@ db = function(x1, coef = beta) {
 }
 ```
 
-Figure 2.1. Classification using linear regression
---------------------------------------------------
+Figure 2-1 Classification using linear regression
+-------------------------------------------------
 
 ``` r
 ggplot(show.legend = FALSE) + 
@@ -86,7 +86,7 @@ ggplot(show.legend = FALSE) +
   theme_void()
 ```
 
-![](figures/figure-2.1-1.png)
+![](figures/figure-2-1-lm-1.png)
 
 Nearest-Neighbors Method
 ========================
@@ -101,7 +101,7 @@ y_hat = getPredictionResponse(predict(mod.knn15, newdata = grid[, -3]))
 grid["y.knn15"] = y_hat
 ```
 
-Figure 2.2 Classification using 15-nearest-neighbors
+Figure 2-2 Classification using 15-nearest-neighbors
 ----------------------------------------------------
 
 ``` r
@@ -113,7 +113,7 @@ ggplot(show.legend = FALSE) +
   theme_void()
 ```
 
-![](figures/figure-2.2-1.png)
+![](figures/figure-2-2-knn15-1.png)
 
 Now we train a 1-nearest-neighbor model.
 
@@ -124,7 +124,7 @@ y_hat = getPredictionResponse(predict(mod.knn1, newdata = grid[, 1:2]))
 grid["y.knn1"] = y_hat
 ```
 
-Figure 2.3 Classification using 1-nearest-neighbor
+Figure 2-3 Classification using 1-nearest-neighbor
 --------------------------------------------------
 
 ``` r
@@ -136,7 +136,7 @@ ggplot(show.legend = FALSE) +
   theme_void()
 ```
 
-![](figures/figure-2.3-1.png)
+![](figures/figure-2-3-knn1-1.png)
 
 Sources
 =======

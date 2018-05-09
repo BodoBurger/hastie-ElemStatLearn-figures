@@ -48,9 +48,9 @@ db = function(x1, coef = beta) {
 }
 ```
 
-## Figure 2.1. Classification using linear regression
+## Figure 2-1 Classification using linear regression
 
-```{r figure-2.1, fig.asp=1}
+```{r figure-2-1-lm, fig.asp=1}
 ggplot(show.legend = FALSE) + 
   geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.lm), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
   geom_line(aes(x = grid$x1, y = db(grid$x1))) +
@@ -72,9 +72,9 @@ grid["y.knn15"] = y_hat
 ```
 
 
-## Figure 2.2 Classification using 15-nearest-neighbors
+## Figure 2-2 Classification using 15-nearest-neighbors
 
-```{r figure-2.2, fig.asp=1}
+```{r figure-2-2-knn15, fig.asp=1}
 ggplot(show.legend = FALSE) + 
   geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.knn15), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
   geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.knn15)), col = "black", bins = 1) +
@@ -92,9 +92,9 @@ y_hat = getPredictionResponse(predict(mod.knn1, newdata = grid[, 1:2]))
 grid["y.knn1"] = y_hat
 ```
 
-## Figure 2.3 Classification using 1-nearest-neighbor
+## Figure 2-3 Classification using 1-nearest-neighbor
 
-```{r figure-2.3, fig.asp=1}
+```{r figure-2-3-knn1, fig.asp=1}
 ggplot(show.legend = FALSE) + 
   geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.knn1), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
   geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.knn1)), col = "black", bins = 1) +
