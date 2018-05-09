@@ -9,5 +9,7 @@ You find the figures along with the R code in the following notebooks:
 2. [Overview of Supervised Learning](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/2-Overview-Supervised-Learning.md)
 
 
-## How to render R Markdown for github
-https://stackoverflow.com/questions/39814916/how-can-i-see-output-of-rmd-in-github
+## Links
+- [mlr Tutorial](https://mlr-org.github.io/mlr/)
+- [ggplot2 Reference](http://ggplot2.tidyverse.org/reference/)
+- [How to render R Markdown for github](https://stackoverflow.com/questions/39814916/how-can-i-see-output-of-rmd-in-github)
