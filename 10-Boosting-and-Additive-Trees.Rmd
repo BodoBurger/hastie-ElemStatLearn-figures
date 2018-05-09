@@ -1,0 +1,34 @@
+---
+title: "Chapter 10: Boosting and Additive Trees"
+author: "Bodo Burger"
+date: 2018-05
+output:
+  rmarkdown::github_document:
+    toc: true
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      fig.path = "figures/")
+set.seed(123)
+library("mlr")
+library("ggplot2")
+```
+
+# Gradient Boosting Machine
+
+
+```{r spam data}
+
+```
+
+
+
+```{r figure-10-6-var-importance}
+
+```
+
+
+
+# Sources
