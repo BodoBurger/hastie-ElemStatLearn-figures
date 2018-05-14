@@ -10,6 +10,7 @@ Bodo Burger
     -   [Figure 2-3 Classification using 1-nearest-neighbor](#figure-2-3-classification-using-1-nearest-neighbor)
 -   [Test error for k-nearest-neighbors](#test-error-for-k-nearest-neighbors)
     -   [Figure 2-4 Test error of nearest-neighbors for different k](#figure-2-4-test-error-of-nearest-neighbors-for-different-k)
+-   [Bonus figure: naive Bayes classifier](#bonus-figure-naive-bayes-classifier)
 -   [Bonus figure: 67-nearest-neighbors](#bonus-figure-67-nearest-neighbors)
 -   [Links](#links)
 
@@ -67,8 +68,8 @@ knitr::kable(summary(df[, c("x1", "x2")])[c(1,6), ], row.names = FALSE)
 
 ``` r
 grid = expand.grid(x1 = seq(-2.6, 4.2, .1), x2 = seq(-2.0, 2.9, .05))
-y_hat = getPredictionResponse(predict(mod.lm, newdata = grid))
-grid["y.lm"] = factor(as.numeric(y_hat > .5))
+y.hat = getPredictionResponse(predict(mod.lm, newdata = grid))
+grid["y.lm"] = factor(as.numeric(y.hat > .5))
 ```
 
 The function for the decision boundary is determined by the estimated coefficients of the model.
@@ -102,8 +103,8 @@ We start with a 15-nearest-neighbor model.
 tsk2 = makeClassifTask(data = data.frame(df[,1:2], y = factor(df$y)), target = "y")
 lrn.knn15 = makeLearner("classif.knn", k = 15)
 mod.knn15 = train(lrn.knn15, tsk2)
-y_hat = getPredictionResponse(predict(mod.knn15, newdata = grid[, -3]))
-grid["y.knn15"] = y_hat
+y.hat = getPredictionResponse(predict(mod.knn15, newdata = grid[, -3]))
+grid["y.knn15"] = y.hat
 ```
 
 Figure 2-2 Classification using 15-nearest-neighbors
@@ -125,8 +126,8 @@ Now we train a 1-nearest-neighbor model.
 ``` r
 lrn.knn1 = setHyperPars(lrn.knn15, k = 1)
 mod.knn1 = train(lrn.knn1, tsk2)
-y_hat = getPredictionResponse(predict(mod.knn1, newdata = grid[, 1:2]))
-grid["y.knn1"] = y_hat
+y.hat = getPredictionResponse(predict(mod.knn1, newdata = grid[, 1:2]))
+grid["y.knn1"] = y.hat
 ```
 
 Figure 2-3 Classification using 1-nearest-neighbor
@@ -186,16 +187,12 @@ train.error.lm = 1 - mean(y.hat[1:200] ==  df$y)
 test.error.lm = 1 - mean(y.hat[201:10200] ==  df.test$y)
 ```
 
-<!-- TODO -->
-<!-- And naive bayes error rate. -->
-<!-- ```{r naive bayes} -->
-<!-- lrn.nb = makeLearner("classif.naiveBayes") -->
-<!-- mod.nb = train(lrn.nb, tsk2) -->
-<!-- performance(predict(mod.nb, newdata = df.full[201:10200, ])) -->
-<!-- ``` -->
 Figure 2-4 Test error of nearest-neighbors for different k
 ----------------------------------------------------------
 
+<!-- TODO -->
+<!-- And bayes error rate. -->
+<!-- performance(predict(mod.nb, newdata = df.full[201:10200, ])) -->
 ``` r
 plot.data = data.frame(k, train = results$data$mmce.train.mean, test = results$data$mmce.test.mean)
 plot.data = reshape2::melt(plot.data, id = "k")
@@ -209,17 +206,48 @@ ggplot(data = plot.data, aes(x = k, y = value, group = variable, col = variable)
                                               transform = function(x) {-log2(x)},
                                               inverse = function(x) {2**(-x)},
                                               breaks = scales::log_breaks(20, 2))) +
-  # visuals:
+  # visual tweaks:
   scale_color_manual(name = element_blank(), values = c("deepskyblue", "orange")) +
   ylab("Missclassification error") + theme_light() + theme(legend.position="bottom")
 ```
 
 ![](figures/figure-2-4-test-error-1.png)
 
+Bonus figure: naive Bayes classifier
+====================================
+
+``` r
+lrn.nb = makeLearner("classif.naiveBayes")
+mod.nb = train(lrn.nb, tsk2)
+y.hat = getPredictionResponse(predict(mod.nb, newdata = grid[, 1:2]))
+grid["y.nb"] = y.hat
+ggplot(show.legend = FALSE) + 
+  geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.nb), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
+  geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.nb)), col = "black", bins = 1) +
+  geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
+  scale_colour_manual(values = c("deepskyblue", "orange")) + theme_void()
+```
+
+![](figures/figure-bonus-naive-bayes-1.png)
+
 Bonus figure: 67-nearest-neighbors
 ==================================
 
 The degrees of freedom for k-nearest-neighbors is given by $\\frac{n}{k}$.
+
+``` r
+lrn.knn67 = setHyperPars(lrn.knn15, k = 67)
+mod.knn67 = train(lrn.knn67, tsk2)
+y.hat = getPredictionResponse(predict(mod.knn67, newdata = grid[, 1:2]))
+grid["y.knn67"] = y.hat
+ggplot(show.legend = FALSE) + 
+  geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.knn67), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
+  geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.knn67)), col = "black", bins = 1) +
+  geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
+  scale_colour_manual(values = c("deepskyblue", "orange")) + theme_void()
+```
+
+![](figures/figure-bonus-knn67-1.png)
 
 Links
 =====
