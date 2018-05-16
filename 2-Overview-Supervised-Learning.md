@@ -10,6 +10,8 @@ Bodo Burger
     -   [Figure 2-3 Classification using 1-nearest-neighbor](#figure-2-3-classification-using-1-nearest-neighbor)
 -   [Test error for k-nearest-neighbors](#test-error-for-k-nearest-neighbors)
     -   [Figure 2-4 Test error of nearest-neighbors for different k](#figure-2-4-test-error-of-nearest-neighbors-for-different-k)
+-   [Local Methods in High Dimensions](#local-methods-in-high-dimensions)
+    -   [Figure 2-6 Curse of dimensionality](#figure-2-6-curse-of-dimensionality)
 -   [Bonus figure: naive Bayes classifier](#bonus-figure-naive-bayes-classifier)
 -   [Bonus figure: 67-nearest-neighbors](#bonus-figure-67-nearest-neighbors)
 -   [Links](#links)
@@ -23,6 +25,8 @@ knitr::opts_chunk$set(echo = TRUE,
 set.seed(123)
 library("mlr")
 library("ggplot2")
+#library("directlabels")
+theme_set(theme_light())
 ```
 
 Linear Model
@@ -208,10 +212,39 @@ ggplot(data = plot.data, aes(x = k, y = value, group = variable, col = variable)
                                               breaks = scales::log_breaks(20, 2))) +
   # visual tweaks:
   scale_color_manual(name = element_blank(), values = c("deepskyblue", "orange")) +
-  ylab("Missclassification error") + theme_light() + theme(legend.position="bottom")
+  ylab("Missclassification error") + theme(legend.position="bottom")
 ```
 
 ![](figures/figure-2-4-test-error-1.png)
+
+<!-- TODO -->
+<!-- # Statistical Decision Theory -->
+<!-- *Check solutions for Exercise 2.2.* -->
+<!-- ## Figure 2-5 optimal Bayes decision boundary -->
+<!-- ```{r figure-2-5-optimal-bayes, fig.asp=1} -->
+<!-- ``` -->
+Local Methods in High Dimensions
+================================
+
+``` r
+e = function(r, p = 1) r^(1/p)
+x = seq(0, .6, .001)
+p = c(1, 2, 3, 10)
+curse.data = data.frame(r = rep(x, length(p)), p = sort(rep(p, length(x))))
+curse.data['Distance'] = unlist(Map(e, curse.data$r, curse.data$p))
+```
+
+Figure 2-6 Curse of dimensionality
+----------------------------------
+
+``` r
+ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquamarine3", size = .6) +
+  xlab("Fraction of Volume") + xlim(c(0, .65)) + scale_y_continuous(breaks=seq(0, 1, 0.2)) +
+  directlabels::geom_dl(aes(label = paste0(" p = ", as.character(p))), method = "last.points") +
+  geom_vline(data = data.frame(x = c(.1, .3)), aes(xintercept = x), linetype = "dashed", col = "deepskyblue", alpha = .5)
+```
+
+![](figures/figure-2-6-curse-1.png)
 
 Bonus figure: naive Bayes classifier
 ====================================

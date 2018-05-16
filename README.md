@@ -23,4 +23,6 @@ You find the figures along with the R code in the following notebooks:
         - http://directlabels.r-forge.r-project.org
         - https://cran.r-project.org/web/packages/ggrepel/vignettes/ggrepel.html
 
-
+## Figures Todo
+ - 2.5
+ - 2.6 unit cube
