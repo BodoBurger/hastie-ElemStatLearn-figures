@@ -5,8 +5,8 @@ See https://web.stanford.edu/~hastie/ElemStatLearn/ where you can get a PDF of t
 
 You find the figures along with the R code in the following notebooks:
 
-1. [Introduction](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/1-Introduction.md)
-2. [Overview of Supervised Learning](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/2-Overview-Supervised-Learning.md)
+1. [Introduction](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/01-Introduction.md)
+2. [Overview of Supervised Learning](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/02-Overview-Supervised-Learning.md)
 
 
 ## Links
