@@ -200,6 +200,33 @@ ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquam
   geom_vline(data = data.frame(x = c(.1, .3)), aes(xintercept = x), linetype = "dashed", col = "deepskyblue", alpha = .5)
 ```
 
+For the following figure we simulate the uniformly distributed data over 10 dimensions.
+
+```{r figure 2-7 data}
+target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
+p = 10 # number of dimensions
+n = 10 # sample size
+set.seed(234)
+multi.dim.data = replicate(p, runif(n, -1, 1))
+d1 = multi.dim.data[ ,1]
+x0 = d1[which.min(abs(d1))]
+path.data = data.frame(x = c(0, x0, x0), y = sapply(c(0, 0, x0), target.fun))
+grid = seq(-1, 1, .01)
+```
+
+## Figure 2-7
+
+```{r figure-2-7}
+
+ggplot(data.frame(x = grid, y = sapply(grid, target.fun)), aes(x, y)) +
+  geom_line(col = "green") +
+  geom_rug(data = data.frame(x = d1, grp = factor(x0 == d1)), aes(x = x, y = NULL, col = grp),
+           show.legend = FALSE) + scale_color_manual(values = c("red", "blue")) +
+  geom_path(data = path.data, aes(x = x, y = y), linetype = "dotted", col = "blue") +
+  ylab("f(X)")
+```
+
+
 
 # Bonus figure: naive Bayes classifier
 

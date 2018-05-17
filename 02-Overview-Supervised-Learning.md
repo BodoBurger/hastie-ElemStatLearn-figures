@@ -12,6 +12,7 @@ Bodo Burger
     -   [Figure 2-4 Test error of nearest-neighbors for different k](#figure-2-4-test-error-of-nearest-neighbors-for-different-k)
 -   [Local Methods in High Dimensions](#local-methods-in-high-dimensions)
     -   [Figure 2-6 Curse of dimensionality](#figure-2-6-curse-of-dimensionality)
+    -   [Figure 2-7](#figure-2-7)
 -   [Bonus figure: naive Bayes classifier](#bonus-figure-naive-bayes-classifier)
 -   [Bonus figure: 67-nearest-neighbors](#bonus-figure-67-nearest-neighbors)
 -   [Links](#links)
@@ -245,6 +246,34 @@ ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquam
 ```
 
 ![](figures/figure-2-6-curse-1.png)
+
+For the following figure we simulate the uniformly distributed data over 10 dimensions.
+
+``` r
+target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
+p = 10 # number of dimensions
+n = 10 # sample size
+set.seed(234)
+multi.dim.data = replicate(p, runif(n, -1, 1))
+d1 = multi.dim.data[ ,1]
+x0 = d1[which.min(abs(d1))]
+path.data = data.frame(x = c(0, x0, x0), y = sapply(c(0, 0, x0), target.fun))
+grid = seq(-1, 1, .01)
+```
+
+Figure 2-7
+----------
+
+``` r
+ggplot(data.frame(x = grid, y = sapply(grid, target.fun)), aes(x, y)) +
+  geom_line(col = "green") +
+  geom_rug(data = data.frame(x = d1, grp = factor(x0 == d1)), aes(x = x, y = NULL, col = grp),
+           show.legend = FALSE) + scale_color_manual(values = c("red", "blue")) +
+  geom_path(data = path.data, aes(x = x, y = y), linetype = "dotted", col = "blue") +
+  ylab("f(X)")
+```
+
+![](figures/figure-2-7-1.png)
 
 Bonus figure: naive Bayes classifier
 ====================================
