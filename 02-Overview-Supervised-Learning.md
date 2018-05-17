@@ -254,9 +254,11 @@ target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
 p = 10 # number of dimensions
 n = 10 # sample size
 set.seed(234)
-multi.dim.data = replicate(p, runif(n, -1, 1))
-d1 = multi.dim.data[ ,1]
-x0 = d1[which.min(abs(d1))]
+multi.dim.data = replicate(p, runif(n, -1, 1)) # creating n samples from p dimensions
+
+# top-left graph:
+d1 = multi.dim.data[ ,1] # we only need one dimension
+x0 = d1[which.min(abs(d1))] # looking for the "nearest-neighbor" of zero
 path.data = data.frame(x = c(0, x0, x0), y = sapply(c(0, 0, x0), target.fun))
 grid = seq(-1, 1, .01)
 ```
