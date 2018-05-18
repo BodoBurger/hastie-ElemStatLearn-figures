@@ -26,7 +26,8 @@ knitr::opts_chunk$set(echo = TRUE,
 set.seed(123)
 library("mlr")
 library("ggplot2")
-#library("directlabels")
+#library("directlabels") # automatic label positioning in ggplot
+#library("ggforce") # drawing circles in ggplot
 theme_set(theme_light())
 ```
 
@@ -252,27 +253,46 @@ For the following figure we simulate the uniformly distributed data over 10 dime
 ``` r
 target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
 p = 10 # number of dimensions
-n = 10 # sample size
+n = 20 # sample size
 set.seed(234)
 multi.dim.data = replicate(p, runif(n, -1, 1)) # creating n samples from p dimensions
 
-# top-left graph:
-d1 = multi.dim.data[ ,1] # we only need one dimension
-x0 = d1[which.min(abs(d1))] # looking for the "nearest-neighbor" of zero
-path.data = data.frame(x = c(0, x0, x0), y = sapply(c(0, 0, x0), target.fun))
+# top-left panel:
+d1.10 = multi.dim.data[1:10 ,1] # we only look at 10 obs of one dimension
+nn0 = d1.10[which.min(abs(d1.10))] # looking for the "nearest-neighbor" of zero
+path.data = data.frame(x = c(0, nn0, nn0), y = sapply(c(0, 0, nn0), target.fun))
 grid = seq(-1, 1, .01)
+
+# top-right panel:
+d1 = multi.dim.data[ ,1] # first dimension
+d2 = multi.dim.data[ ,2] # second dimension
+nn1 = d1[which.min(abs(d1))] # "nearest-neighbor" of zero in one dimension
+dist0 = sqrt(d1^2 + d2^2) # euclidean distance between all points and (0, 0)
+i.min = which.min(dist0) # index of "nearest-neighbor"
+nn2 = c(d1[i.min], d2[i.min])
 ```
 
 Figure 2-7
 ----------
 
 ``` r
-ggplot(data.frame(x = grid, y = sapply(grid, target.fun)), aes(x, y)) +
+tl = ggplot(data.frame(x = grid, y = sapply(grid, target.fun)), aes(x, y)) +
   geom_line(col = "green") +
-  geom_rug(data = data.frame(x = d1, grp = factor(x0 == d1)), aes(x = x, y = NULL, col = grp),
+  geom_rug(data = data.frame(x = d1.10, grp = factor(nn0 == d1.10)), aes(x = x, y = NULL, col = grp),
            show.legend = FALSE) + scale_color_manual(values = c("red", "blue")) +
   geom_path(data = path.data, aes(x = x, y = y), linetype = "dotted", col = "blue") +
-  ylab("f(X)")
+  xlab("X") + ylab("f(X)") + ggtitle("1-NN in One Dimension")
+
+tr = ggplot(data.frame(d1, d2), aes(x = d1, y = d2)) +
+  geom_point(col = "green", size = 2.5) +
+  ggforce::geom_circle(data = NULL, aes(x0 = 0, y0 = 0, r = min(dist0)), inherit.aes = FALSE,
+                       colour = "blue", size = .2) +
+  geom_rect(aes(xmin = -abs(nn1), xmax = abs(nn1), ymin = -1, ymax = 1),
+            colour = "orange", alpha = 0, size = .2) +
+  geom_point(data = NULL, aes(x = 0, y = 0), size = 2.5) +
+  xlim(c(-1,1)) + xlab("X1") + ylab("X2") + ggtitle("1-NN in One vs. Two Dimensions")
+
+gridExtra::grid.arrange(tl, tr, nrow = 2, ncol = 2)
 ```
 
 ![](figures/figure-2-7-1.png)
