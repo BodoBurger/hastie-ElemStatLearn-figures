@@ -32,4 +32,6 @@ You find the figures along with the R code in the following notebooks:
 ## Figures Todo
  - 2.5
  - 2.6 unit cube
- - 2.7 Why is alpha not working with ggforce::geom_circle?
+ - 2.7 
+     - Why is alpha not working with ggforce::geom_circle?
+     - anti-aliasing
