@@ -28,6 +28,7 @@ library("mlr")
 library("ggplot2")
 #library("directlabels") # automatic label positioning in ggplot
 #library("ggforce") # drawing circles in ggplot
+#library("gridExtra") # arrange multiple plots
 theme_set(theme_light())
 ```
 
@@ -261,7 +262,7 @@ multi.dim.data = replicate(p, runif(n, -1, 1)) # creating n samples from p dimen
 d1.10 = multi.dim.data[1:10 ,1] # we only look at 10 obs of one dimension
 nn0 = d1.10[which.min(abs(d1.10))] # looking for the "nearest-neighbor" of zero
 path.data = data.frame(x = c(0, nn0, nn0), y = sapply(c(0, 0, nn0), target.fun))
-grid = seq(-1, 1, .01)
+grid.tl = seq(-1, 1, .01)
 
 # top-right panel:
 d1 = multi.dim.data[1:24, 1] # first dimension
@@ -306,7 +307,7 @@ Figure 2-7
 ----------
 
 ``` r
-tl = ggplot(data.frame(x = grid, y = sapply(grid, target.fun)), aes(x, y)) +
+tl = ggplot(data.frame(x = grid.tl, y = sapply(grid.tl, target.fun)), aes(x, y)) +
   geom_line(col = "green") +
   geom_rug(data = data.frame(x = d1.10, grp = factor(nn0 == d1.10)), aes(x = x, y = NULL, col = grp),
            show.legend = FALSE) + scale_color_manual(values = c("red", "blue")) +
@@ -323,7 +324,7 @@ tr = ggplot(data.frame(d1, d2), aes(x = d1, y = d2)) +
   xlim(c(-1,1)) + xlab("X1") + ylab("X2") + ggtitle("1-NN in One vs. Two Dimensions")
 
 bl = ggplot(bl.data, aes(x = Dimension, y = AverageDistance)) +
-  geom_point(col = "red", size = 2) +
+  geom_point(col = "red") +
   geom_line(aes(y = Distance1q), col = "red", alpha = .5, linetype = 2) + 
   geom_line(aes(y = Distance3q), col = "red", alpha = .5, linetype = 2) +
   xlab("Dimension") + ylab("Average Distance to Nearest Neighbor") +
