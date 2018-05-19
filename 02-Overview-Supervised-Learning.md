@@ -324,23 +324,12 @@ tr = ggplot(data.frame(d1, d2), aes(x = d1, y = d2)) +
 
 bl = ggplot(bl.data, aes(x = Dimension, y = AverageDistance)) +
   geom_point(col = "red", size = 2) +
-  geom_line(aes(y = Distance1q), col = "red", alpha = .5) + 
-  geom_line(aes(y = Distance3q), col = "red", alpha = .5) +
+  geom_line(aes(y = Distance1q), col = "red", alpha = .5, linetype = 2) + 
+  geom_line(aes(y = Distance3q), col = "red", alpha = .5, linetype = 2) +
   xlab("Dimension") + ylab("Average Distance to Nearest Neighbor") +
-  scale_x_continuous(breaks = 1:p)
+  scale_x_continuous(breaks = 1:p) +
   ggtitle("Distance to 1-NN vs. Dimension")
-```
 
-    ## $title
-    ## [1] "Distance to 1-NN vs. Dimension"
-    ## 
-    ## $subtitle
-    ## NULL
-    ## 
-    ## attr(,"class")
-    ## [1] "labels"
-
-``` r
 gridExtra::grid.arrange(tl, tr, bl, nrow = 2, ncol = 2)
 ```
 
