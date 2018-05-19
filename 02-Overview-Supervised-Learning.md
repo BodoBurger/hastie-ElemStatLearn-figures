@@ -289,12 +289,16 @@ ggplot(data = example.2d, mapping = aes(x = x1, y = x2)) +
 ![](figures/figure-2-7-data-1.png)
 
 ``` r
-bl.data = data.frame(Dimension = 1:p, AverageDistance = rep(0, p))
+bl.data = data.frame(Dimension = 1:p, AverageDistance = rep(0, p), 
+                     Distance1q = rep(0, p), Distance3q = rep(0, p))
 for (d in 1:p) {
   #cat("Dimension", d, "\n")
   distances = as.matrix(dist(multi.dim.data[ ,1:d], upper = TRUE, diag = TRUE))
   min.distances = apply(distances + diag(Inf, n), 1, min)
+  # min.distances equals distance to nearest neighbor
   bl.data[d, "AverageDistance"] = mean(min.distances)
+  bl.data[d, "Distance1q"] = quantile(min.distances)[2]
+  bl.data[d, "Distance3q"] = quantile(min.distances)[4]
 }
 ```
 
@@ -318,11 +322,25 @@ tr = ggplot(data.frame(d1, d2), aes(x = d1, y = d2)) +
   geom_point(data = NULL, aes(x = 0, y = 0), size = 2.5) +
   xlim(c(-1,1)) + xlab("X1") + ylab("X2") + ggtitle("1-NN in One vs. Two Dimensions")
 
-bl = ggplot(bl.data, aes(x = factor(Dimension), y = AverageDistance)) +
-  geom_point(colour = "red", size = 2) +
+bl = ggplot(bl.data, aes(x = Dimension, y = AverageDistance)) +
+  geom_point(col = "red", size = 2) +
+  geom_line(aes(y = Distance1q), col = "red", alpha = .5) + 
+  geom_line(aes(y = Distance3q), col = "red", alpha = .5) +
   xlab("Dimension") + ylab("Average Distance to Nearest Neighbor") +
+  scale_x_continuous(breaks = 1:p)
   ggtitle("Distance to 1-NN vs. Dimension")
+```
 
+    ## $title
+    ## [1] "Distance to 1-NN vs. Dimension"
+    ## 
+    ## $subtitle
+    ## NULL
+    ## 
+    ## attr(,"class")
+    ## [1] "labels"
+
+``` r
 gridExtra::grid.arrange(tl, tr, bl, nrow = 2, ncol = 2)
 ```
 
