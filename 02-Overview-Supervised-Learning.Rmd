@@ -203,10 +203,10 @@ ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquam
 
 For the following figure we simulate the uniformly distributed data over 10 dimensions.
 
-```{r figure 2-7 data}
+```{r figure-2-7-data, fig.asp=1}
 target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
 p = 10 # number of dimensions
-n = 20 # sample size
+n = 1000 # sample size
 set.seed(234)
 multi.dim.data = replicate(p, runif(n, -1, 1)) # creating n samples from p dimensions
 
@@ -217,12 +217,34 @@ path.data = data.frame(x = c(0, nn0, nn0), y = sapply(c(0, 0, nn0), target.fun))
 grid = seq(-1, 1, .01)
 
 # top-right panel:
-d1 = multi.dim.data[ ,1] # first dimension
-d2 = multi.dim.data[ ,2] # second dimension
+d1 = multi.dim.data[1:24, 1] # first dimension
+d2 = multi.dim.data[1:24, 2] # second dimension
 nn1 = d1[which.min(abs(d1))] # "nearest-neighbor" of zero in one dimension
 dist0 = sqrt(d1^2 + d2^2) # euclidean distance between all points and (0, 0)
 i.min = which.min(dist0) # index of "nearest-neighbor"
 nn2 = c(d1[i.min], d2[i.min])
+
+# bottom-left panel:
+obs = 1:10
+example.2d = data.frame(n = obs, x1 = d1[obs], x2 = d2[obs])
+distances = as.matrix(dist(example.2d[-1], upper = TRUE, diag = TRUE))
+tmp = apply(distances + diag(Inf, 10), 1, which.min)
+tmp2 = apply(distances + diag(Inf, 10), 1, min)
+ggplot(data = example.2d, mapping = aes(x = x1, y = x2)) + 
+  ggforce::geom_circle(data = example.2d, aes(x0 = x1, y0 = x2, r = tmp2), 
+                       col = "green", alpha = .1, inherit.aes = FALSE) +
+  geom_text(aes(label = n), size = 6) +
+  geom_text(aes(y = x2 - .15, label = paste0("NN: ",tmp, "\nDist: ",round(tmp2, 2))), 
+            col = "red", size = 3) +
+  ggtitle("Nearest neighbor for 10 observations and two dimensions")
+
+bl.data = data.frame(Dimension = 1:p, AverageDistance = rep(0, p))
+for (d in 1:p) {
+  #cat("Dimension", d, "\n")
+  distances = as.matrix(dist(multi.dim.data[ ,1:d], upper = TRUE, diag = TRUE))
+  min.distances = apply(distances + diag(Inf, n), 1, min)
+  bl.data[d, "AverageDistance"] = mean(min.distances)
+}
 ```
 
 ## Figure 2-7
@@ -244,7 +266,12 @@ tr = ggplot(data.frame(d1, d2), aes(x = d1, y = d2)) +
   geom_point(data = NULL, aes(x = 0, y = 0), size = 2.5) +
   xlim(c(-1,1)) + xlab("X1") + ylab("X2") + ggtitle("1-NN in One vs. Two Dimensions")
 
-gridExtra::grid.arrange(tl, tr, nrow = 2, ncol = 2)
+bl = ggplot(bl.data, aes(x = factor(Dimension), y = AverageDistance)) +
+  geom_point(colour = "red", size = 2) +
+  xlab("Dimension") + ylab("Average Distance to Nearest Neighbor") +
+  ggtitle("Distance to 1-NN vs. Dimension")
+
+gridExtra::grid.arrange(tl, tr, bl, nrow = 2, ncol = 2)
 ```
 
 
