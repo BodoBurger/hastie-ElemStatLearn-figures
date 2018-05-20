@@ -254,7 +254,7 @@ for (d in 1:p) {
 }
 
 # bottom-right panel:
-B = 10000
+B = 500
 y0.hat.matrix = matrix(nrow = p, ncol = B)
 for (b in 1:B) {
   X = simulateData(p = 10, n = 1000)
@@ -274,8 +274,9 @@ br.data = data.frame(Dimension = rep(1:10, 3),
                      value = c(y0.hat.mse, y0.hat.var, y0.hat.bias^2))
 
 # using mlr; this takes much longer because we fit B * p models
-# B = 1000
+# B = 500
 # lrn.knn1.regr = makeLearner("regr.kknn", k = 1)
+# x0 = data.frame(matrix(0, nrow = 1, ncol = p))
 # y0.hat.matrix = matrix(nrow = p, ncol = B)
 # for (b in 1:B) {
 #   cat("Round ", b, "/", B, "\n")
@@ -284,17 +285,17 @@ br.data = data.frame(Dimension = rep(1:10, 3),
 #     Xd = X[ , 1:d, drop = FALSE]
 #     target = apply(Xd, 1, target.fun)
 #     df = data.frame(Xd, target)
-#     X0 = data.frame(matrix(0, nrow = 1, ncol = d))
-#     if(d==1) names(X0) = "Xd" # weird work around because of stupid R simplifying when slicing a data.frame/matrix
+#     x = x0[1:d]
+#     if(d == 1) names(x) = "Xd" # weird work around because of R behaviour naming columns
 #     tsk4 = makeRegrTask(data = df, target = "target")
 #     trn = train(lrn.knn1.regr, tsk4)
-#     y0.hat = getPredictionResponse(predict(trn, newdata = X0))
+#     y0.hat = getPredictionResponse(predict(trn, newdata = x))
 #     y0.hat.matrix[d, b] = y0.hat
 #   }
 # }
 ```
 
-The bias-variance decomposition panel is the most complicated. We have to calculate the expected value of the target value for $\mathbf{x} = (0, \ldots, 0)$ predicted by 1-nearest-neighbor given a sample of $n = 1000$ observations. We estimate the expected value by drawing 10000 samples with 1000 observations, calculating the target value of the nearest neighbor to zero and the empirical mean of these predictions.
+The bias-variance decomposition panel is the most complicated. We have to calculate the expected value of the target value for $\mathbf{x} = (0, \ldots, 0)$ predicted by 1-nearest-neighbor given a sample of *n = `r n`* observations. We estimate the expected value by drawing `r B` samples with `r n` observations, calculating the target value of the nearest neighbor to zero and the empirical mean of these predictions.
 
 ## Figure 2-7
 
