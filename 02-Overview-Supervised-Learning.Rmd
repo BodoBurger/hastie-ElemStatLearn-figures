@@ -205,11 +205,13 @@ ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquam
 For the following figure we simulate the uniformly distributed data over 10 dimensions.
 
 ```{r figure-2-7-data, fig.asp=1}
+simulateData = function(p = 10, n = 1000) replicate(p, runif(n, -1, 1))
+
 target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
 p = 10 # number of dimensions
 n = 1000 # sample size
 set.seed(234)
-multi.dim.data = replicate(p, runif(n, -1, 1)) # creating n samples from p dimensions
+multi.dim.data = simulateData(p, n) # creating n samples from p dimensions
 
 # top-left panel:
 d1.10 = multi.dim.data[1:10 ,1] # we only look at 10 obs of one dimension
@@ -250,7 +252,49 @@ for (d in 1:p) {
   bl.data[d, "Distance1q"] = quantile(min.distances)[2]
   bl.data[d, "Distance3q"] = quantile(min.distances)[4]
 }
+
+# bottom-right panel:
+B = 10000
+y0.hat.matrix = matrix(nrow = p, ncol = B)
+for (b in 1:B) {
+  X = simulateData(p = 10, n = 1000)
+  for (d in 1:p) {
+    Xd = X[ , 1:d, drop = FALSE]
+    nn0 = Xd[which.min(rowSums(Xd^2)), ] # looking for the nearest-neighbor for x = (0, ..., 0) 
+    y0.hat = target.fun(nn0) # 1-nn-prediction for target value of x = (0, ..., 0)
+    y0.hat.matrix[d, b] = y0.hat
+  }
+}
+bias.matrix = y0.hat.matrix - 1 # target.fun(zero) = 1 for any dimension
+y0.hat.bias = rowMeans(bias.matrix)
+y0.hat.var = apply(y0.hat.matrix, 1, var)
+y0.hat.mse = y0.hat.var + y0.hat.bias^2
+br.data = data.frame(Dimension = rep(1:10, 3),
+                     grp = c(rep("MSE", 10), rep("Variance", 10), rep("SquaredBias", 10)),
+                     value = c(y0.hat.mse, y0.hat.var, y0.hat.bias^2))
+
+# using mlr; this takes much longer because we fit B * p models
+# B = 1000
+# lrn.knn1.regr = makeLearner("regr.kknn", k = 1)
+# y0.hat.matrix = matrix(nrow = p, ncol = B)
+# for (b in 1:B) {
+#   cat("Round ", b, "/", B, "\n")
+#   X = simulateData(p = 10, n = 1000)
+#   for (d in 1:p) {
+#     Xd = X[ , 1:d, drop = FALSE]
+#     target = apply(Xd, 1, target.fun)
+#     df = data.frame(Xd, target)
+#     X0 = data.frame(matrix(0, nrow = 1, ncol = d))
+#     if(d==1) names(X0) = "Xd" # weird work around because of stupid R simplifying when slicing a data.frame/matrix
+#     tsk4 = makeRegrTask(data = df, target = "target")
+#     trn = train(lrn.knn1.regr, tsk4)
+#     y0.hat = getPredictionResponse(predict(trn, newdata = X0))
+#     y0.hat.matrix[d, b] = y0.hat
+#   }
+# }
 ```
+
+The bias-variance decomposition panel is the most complicated. We have to calculate the expected value of the target value for $\mathbf{x} = (0, \ldots, 0)$ predicted by 1-nearest-neighbor given a sample of $n = 1000$ observations. We estimate the expected value by drawing 10000 samples with 1000 observations, calculating the target value of the nearest neighbor to zero and the empirical mean of these predictions.
 
 ## Figure 2-7
 
@@ -276,13 +320,27 @@ bl = ggplot(bl.data, aes(x = Dimension, y = AverageDistance)) +
   geom_line(aes(y = Distance1q), col = "red", alpha = .5, linetype = 2) + 
   geom_line(aes(y = Distance3q), col = "red", alpha = .5, linetype = 2) +
   xlab("Dimension") + ylab("Average Distance to Nearest Neighbor") +
-  scale_x_continuous(breaks = 1:p) +
+  scale_x_continuous(breaks = seq(2,p,2)) +
   ggtitle("Distance to 1-NN vs. Dimension")
 
-gridExtra::grid.arrange(tl, tr, bl, nrow = 2, ncol = 2)
+br = ggplot(data = br.data, mapping = aes(x = Dimension, y = value, group = grp, colour = grp)) +
+  geom_point() + geom_line() +
+  scale_colour_manual(values = c("red", "blue", "green")) +
+  scale_x_continuous(breaks = seq(2,p,2)) + ylab("MSE") + 
+  theme(legend.title = element_blank(), legend.position = c(.2, .8),
+        legend.text = element_text(size = 6), legend.margin = margin(t=0,r=0,b=0,l=0)) +
+  ggtitle("MSE vs. Dimension")
+
+gridExtra::grid.arrange(tl, tr, bl, br, nrow = 2, ncol = 2)
 ```
 
+It would be interesting to know why squared bias and MSE in the bottom-right panel deviate quite a lot from the book. I have no answer to that at the moment.
 
+For Figure 2-8 the target function is constant in all but one dimension.
+
+```{rr figure-2-8-data}
+
+```
 
 # Bonus figure: naive Bayes classifier
 
