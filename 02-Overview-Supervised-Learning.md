@@ -13,6 +13,7 @@ Bodo Burger
 -   [Local Methods in High Dimensions](#local-methods-in-high-dimensions)
     -   [Figure 2-6 Curse of dimensionality](#figure-2-6-curse-of-dimensionality)
     -   [Figure 2-7](#figure-2-7)
+    -   [Figure 2-8](#figure-2-8)
 -   [Bonus figure: naive Bayes classifier](#bonus-figure-naive-bayes-classifier)
 -   [Bonus figure: 67-nearest-neighbors](#bonus-figure-67-nearest-neighbors)
 -   [Links](#links)
@@ -311,8 +312,8 @@ for (b in 1:B) {
   X = simulateData(p = 10, n = 1000)
   for (d in 1:p) {
     Xd = X[ , 1:d, drop = FALSE]
-    nn0 = Xd[which.min(rowSums(Xd^2)), ] # looking for the nearest-neighbor for x = (0, ..., 0) 
-    y0.hat = target.fun(nn0) # 1-nn-prediction for target value of x = (0, ..., 0)
+    nn = Xd[which.min(rowSums(Xd^2)), ] # looking for the nearest-neighbor for x = (0, ..., 0) 
+    y0.hat = target.fun(nn) # 1-nn-prediction for target value of x = (0, ..., 0)
     y0.hat.matrix[d, b] = y0.hat
   }
 }
@@ -357,6 +358,7 @@ tl = ggplot(data.frame(x = grid.tl, y = sapply(grid.tl, target.fun)), aes(x, y))
   geom_rug(data = data.frame(x = d1.10, grp = factor(nn0 == d1.10)), aes(x = x, y = NULL, col = grp),
            show.legend = FALSE) + scale_color_manual(values = c("red", "blue")) +
   geom_path(data = path.data, aes(x = x, y = y), linetype = "dotted", col = "blue") +
+  geom_point(mapping = aes(x = nn0, y = target.fun(nn0)), col = "blue", size = 2) +
   xlab("X") + ylab("f(X)") + ggtitle("1-NN in One Dimension")
 
 tr = ggplot(data.frame(d1, d2), aes(x = d1, y = d2)) +
@@ -393,8 +395,58 @@ It would be interesting to know why squared bias and MSE in the bottom-right pan
 
 For Figure 2-8 the target function is constant in all but one dimension.
 
-``` rr
+``` r
+target.fun = function(x) .5 * (matrix(x[1], ncol = 1) + 1)^3
+
+# left panel:
+nn0 = d1.10[which.min(abs(d1.10))] # looking for the "nearest-neighbor" of zero
+path.data = data.frame(x = c(0, nn0, nn0), y = sapply(c(0, 0, nn0), target.fun))
+
+# right panel:
+B = 10000
+y0.hat.matrix = matrix(nrow = p, ncol = B)
+for (b in 1:B) {
+  X = simulateData(p = 10, n = 1000)
+  for (d in 1:p) {
+    Xd = X[ , 1:d, drop = FALSE]
+    nn = Xd[which.min(rowSums(Xd^2)), ] # looking for the nearest-neighbor for x = (0, ..., 0) 
+    y0.hat = target.fun(nn) # 1-nn-prediction for target value of x = (0, ..., 0)
+    y0.hat.matrix[d, b] = y0.hat
+  }
+}
+bias.matrix = y0.hat.matrix - .5 # target.fun(zero) = .5 for any dimension
+y0.hat.bias = rowMeans(bias.matrix)
+y0.hat.var = apply(y0.hat.matrix, 1, var)
+y0.hat.mse = y0.hat.var + y0.hat.bias^2
+br.data = data.frame(Dimension = rep(1:10, 3),
+                     grp = c(rep("MSE", 10), rep("Variance", 10), rep("SquaredBias", 10)),
+                     value = c(y0.hat.mse, y0.hat.var, y0.hat.bias^2))
 ```
+
+Figure 2-8
+----------
+
+``` r
+lp = ggplot(data.frame(x = grid.tl, y = sapply(grid.tl, target.fun)), aes(x, y)) +
+  geom_line(col = "deepskyblue") +
+  geom_rug(data = data.frame(x = d1.10, grp = factor(nn0 == d1.10)), aes(x = x, y = NULL, col = grp),
+           show.legend = FALSE) + scale_color_manual(values = c("orange", "aquamarine3")) +
+  geom_path(data = path.data, aes(x = x, y = y), linetype = "dotted", col = "aquamarine3") +
+  geom_point(mapping = aes(x = nn0, y = target.fun(nn0)), col = "aquamarine3", size = 2) +
+  xlab("X") + ylab("f(X)") + ggtitle("1-NN in One Dimension")
+
+rp = ggplot(data = br.data, mapping = aes(x = Dimension, y = value, group = grp, colour = grp)) +
+  geom_point() + geom_line() +
+  scale_colour_manual(values = c("orange", "aquamarine3", "deepskyblue")) +
+  scale_x_continuous(breaks = seq(2,p,2)) + ylab("MSE") + 
+  theme(legend.title = element_blank(), legend.position = c(.2, .8),
+        legend.text = element_text(size = 6), legend.margin = margin(t=0,r=0,b=0,l=0)) +
+  ggtitle("MSE vs. Dimension")
+
+gridExtra::grid.arrange(lp, rp, nrow = 1)
+```
+
+![](figures/figure-2-8-1.png)
 
 Bonus figure: naive Bayes classifier
 ====================================
