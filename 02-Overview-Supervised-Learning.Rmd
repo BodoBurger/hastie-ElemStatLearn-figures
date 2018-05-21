@@ -363,7 +363,7 @@ bias.matrix = y0.hat.matrix - .5 # target.fun(zero) = .5 for any dimension
 y0.hat.bias = rowMeans(bias.matrix)
 y0.hat.var = apply(y0.hat.matrix, 1, var)
 y0.hat.mse = y0.hat.var + y0.hat.bias^2
-br.data = data.frame(Dimension = rep(1:10, 3),
+rp.data = data.frame(Dimension = rep(1:10, 3),
                      grp = c(rep("MSE", 10), rep("Variance", 10), rep("SquaredBias", 10)),
                      value = c(y0.hat.mse, y0.hat.var, y0.hat.bias^2))
 ```
@@ -379,7 +379,7 @@ lp = ggplot(data.frame(x = grid.tl, y = sapply(grid.tl, target.fun)), aes(x, y))
   geom_point(mapping = aes(x = nn0, y = target.fun(nn0)), col = "aquamarine3", size = 2) +
   xlab("X") + ylab("f(X)") + ggtitle("1-NN in One Dimension")
 
-rp = ggplot(data = br.data, mapping = aes(x = Dimension, y = value, group = grp, colour = grp)) +
+rp = ggplot(data = rp.data, mapping = aes(x = Dimension, y = value, group = grp, colour = grp)) +
   geom_point() + geom_line() +
   scale_colour_manual(values = c("orange", "aquamarine3", "deepskyblue")) +
   scale_x_continuous(breaks = seq(2,p,2)) + ylab("MSE") + 
@@ -389,6 +389,63 @@ rp = ggplot(data = br.data, mapping = aes(x = Dimension, y = value, group = grp,
 
 gridExtra::grid.arrange(lp, rp, nrow = 1)
 ```
+
+## Figure 2-9
+
+```{r figure-2-9-data}
+p = 10
+n = 500
+simulateData = function(p = 10, n = 500) replicate(p, runif(n, -1, 1))
+target.orange = function(x) x[1] + rnorm(1)
+target.blue = function(x) .5 * (x[1] + 1)^3 + rnorm(1)
+
+B = 1000
+nn.y0.hat.matrix.orange = matrix(nrow = p, ncol = B)
+nn.y0.hat.matrix.blue = matrix(nrow = p, ncol = B)
+ls.y0.hat.orange = numeric(B)
+ls.y0.hat.blue = numeric(B)
+for (b in 1:B) {
+  X = simulateData()
+  x1 = X[ , 1]
+  y.orange = sapply(x1, target.orange)
+  y.blue = sapply(x1, target.blue)
+  fit.lm.orange = lm(y.orange ~ x1) # with or without intercept?
+  fit.lm.blue = lm(y.blue ~ x1)
+  ls.y0.hat.orange[b] = predict(fit.lm.orange, newdata = data.frame(x1 = 0))
+  ls.y0.hat.blue[b] = predict(fit.lm.blue, newdata = data.frame(x1 = 0))
+  for (d in 1:p) {
+    Xd = X[ , 1:d, drop = FALSE]
+    nn = Xd[which.min(rowSums(Xd^2)), ] # looking for the nearest-neighbor for x = (0, ..., 0) 
+    y0.hat.orange = target.orange(nn) # 1-nn-prediction for target value of x = (0, ..., 0)
+    y0.hat.blue = target.blue(nn) # 1-nn-prediction for target value of x = (0, ..., 0)
+    nn.y0.hat.matrix.orange[d, b] = y0.hat.orange
+    nn.y0.hat.matrix.blue[d, b] = y0.hat.blue
+  }
+}
+nn.bias.matrix.orange = nn.y0.hat.matrix.orange # target.orange(zero) = 0 for any dimension
+nn.bias.matrix.blue = nn.y0.hat.matrix.blue - .5 # target.blue(zero) = 0.5 for any dimension
+nn.y0.hat.bias.orange = rowMeans(nn.bias.matrix.orange)
+nn.y0.hat.bias.blue = rowMeans(nn.bias.matrix.blue)
+ls.y0.hat.bias.orange = mean(ls.y0.hat.orange)
+ls.y0.hat.bias.blue = mean(ls.y0.hat.blue - .5)
+p.data = data.frame(Dimension = rep(1:10, 2),
+                    grp = c(rep("Linear", 10), rep("Cubic", 10)),
+                    value = c(nn.y0.hat.bias.orange/ls.y0.hat.bias.orange,
+                              nn.y0.hat.bias.blue/ls.y0.hat.bias.blue))
+```
+
+Obviously, figure 2-9 is off. Find the mistake! ;)
+
+```{r figure-2-9, fig.asp=.5}
+ggplot(data = p.data, mapping = aes(x = Dimension, y = value, group = grp, colour = grp)) +
+  geom_point() + geom_line() +
+  scale_colour_manual(values = c("deepskyblue", "orange")) +
+  scale_x_continuous(breaks = seq(2,p,2)) + ylab("EPE Ratio") + 
+  theme(legend.title = element_blank(), legend.position = c(.2, .5),
+        legend.text = element_text(size = 6), legend.margin = margin(t=0,r=0,b=0,l=0)) +
+  ggtitle("Expected Prediction Error of 1NN vs. OLS")
+```
+
 
 
 # Bonus figure: naive Bayes classifier
