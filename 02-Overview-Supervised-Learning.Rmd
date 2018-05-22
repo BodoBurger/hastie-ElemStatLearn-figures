@@ -446,7 +446,79 @@ ggplot(data = p.data, mapping = aes(x = Dimension, y = value, group = grp, colou
   ggtitle("Expected Prediction Error of 1NN vs. OLS")
 ```
 
+# Model Selection and the Bias-Variance Tradeoff
 
+Figure 2-11 is reproduced by an actual example.
+
+```{r figure-2-11-data, message=FALSE, warning=FALSE}
+# data generating process
+n = 100
+target.fun = function(x) 5 * sin(2 * x) + 2 * cos(x + 1)
+x = runif(n, 0, 6)
+eps = rnorm(n, 0, 1)
+y = target.fun(x) + eps
+
+# train / test set split
+ratio = .5
+train.indices = c(rep(TRUE, ratio * n), rep(FALSE, (1 - ratio) * n))
+train.df = data.frame(x = x[train.indices], y = y[train.indices])
+test.df = data.frame(x = x[!train.indices], y = y[!train.indices])
+
+#
+grid = data.frame(x = seq(0, 6, .01))
+plot(x, y, pch = "+", col = rgb(0, 0, 0, alpha = .5))
+lines(grid$x, target.fun(grid$x), col = "red", lwd = 2)
+test.fit = lm(y ~ poly(x, 12, raw = TRUE), data = train.df)
+lines(grid$x, predict(object = test.fit, newdata = data.frame(x = grid$x)), col = "blue")
+
+#
+B = 1000
+mse = function(y, y.hat) mean((y - y.hat)^2)
+k = 12
+train.errors = matrix(nrow = k, ncol = B)
+test.errors = matrix(nrow = k, ncol = B)
+for (b in (1:B)) {
+  x = runif(n, 0, 6)
+  eps = rnorm(n, 0, 1)
+  y = target.fun(x) + eps
+  train.df = data.frame(x = x[train.indices], y = y[train.indices])
+  test.df = data.frame(x = x[!train.indices], y = y[!train.indices])
+  for (i in (1:k)) {
+    fit = lm(y ~ poly(x, i, raw = TRUE), data = train.df)
+    train.errors[i, b] = mse(train.df$y, predict(fit))
+    test.errors[i, b] = mse(test.df$y, predict(fit, newdata = test.df))
+  }
+}
+p.data = data.frame(k = rep(1:k, 2), error = c(rowMeans(train.errors), rowMeans(test.errors)), 
+                    grp = c(rep("train", k), rep("test", k)))
+```
+
+## Figure 2-11
+
+```{r figure-2-11}
+ggplot(data = p.data, mapping = aes(x = factor(k), y = error, group = grp, color = grp)) +
+  geom_point(size = 2) + geom_line(alpha = .2) + coord_cartesian(ylim = c(0, 30)) +
+  xlab("Model Complexity") + ylab("Prediction Error") + 
+  theme(legend.title = element_blank(), legend.position = c(.5, .7))
+```
+
+Polynomial of degree 7 seems to be the sweet spot.
+
+```{r figure-2-11-compare-poly}
+fit1 = lm(y ~ poly(x, 1, raw = TRUE), data = train.df)
+fit7 = lm(y ~ poly(x, 7, raw = TRUE), data = train.df)
+fit20 = lm(y ~ poly(x, 20, raw = TRUE), data = train.df)
+
+p2.data = data.frame(x = grid$x, 
+                     target.fun = target.fun(grid$x),
+                     linear = predict(fit1, newdata = grid),
+                     poly7 = predict(fit7, newdata = grid),
+                     poly20 = predict(fit20, newdata = grid))
+p2.data = reshape2::melt(p2.data, id = "x", variable.name = "group", value.name = "y")
+ggplot(data = p2.data, mapping = aes(x = x, y = y, group = group, col = group)) +
+  geom_line(size = 1, alpha = .8) + geom_point(data = train.df, mapping = aes(x = x, y = y), inherit.aes = FALSE) +
+  coord_cartesian(ylim = c(-7, 6))
+```
 
 # Bonus figure: naive Bayes classifier
 
