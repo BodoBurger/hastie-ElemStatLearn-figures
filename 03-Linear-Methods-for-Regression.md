@@ -1,0 +1,40 @@
+Chapter 3: Linear Methods for Regression
+================
+Bodo Burger
+2018-05
+
+-   [Linear Regression Models](#linear-regression-models)
+    -   [Figure 3-3 tail probabilities](#figure-3-3-tail-probabilities)
+-   [Links](#links)
+
+``` r
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      cache = TRUE, cache.path = "cache/",
+                      fig.path = "figures/")
+set.seed(123)
+library("mlr")
+library("ggplot2")
+theme_set(theme_light())
+```
+
+Linear Regression Models
+========================
+
+Figure 3-3 tail probabilities
+-----------------------------
+
+``` r
+z = seq(1.9, 3, .01)
+plot(z, 2 * (1 - pt(z, df = 30)), col = "orange", type = "l", lwd = 1, xlab = "Z", ylab = "Tail Probabilities")
+lines(z, 2 * (1 - pt(z, df = 100)), col = "deepskyblue")
+lines(z, 2 * (1 - pnorm(z)), col = "aquamarine3")
+abline(h = c(.01, .05), lty = 2, lwd = .5)
+abline(v = qt(c(.975, .995), df = 30), lty = 2, lwd = .5, col = "orange")
+abline(v = qt(c(.975, .995), df = 100), lty = 2, lwd = .5, col = "deepskyblue")
+abline(v = qnorm(c(.975, .995)), lty = 2, lwd = .5, col = "aquamarine3")
+```
+
+![](figures/figure-3-3-tail-probabilities-1.png)
+
+Links
+=====
