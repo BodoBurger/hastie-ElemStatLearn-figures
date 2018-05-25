@@ -33,6 +33,25 @@ abline(v = qt(c(.975, .995), df = 100), lty = 2, lwd = .5, col = "deepskyblue")
 abline(v = qnorm(c(.975, .995)), lty = 2, lwd = .5, col = "aquamarine3")
 ```
 
+## Table 3-1
+
+```{r}
+prostate.data = ElemStatLearn::prostate
+#prostate.data$svi = factor(prostate.data$svi)
+#prostate.data$gleason = factor(prostate.data$gleason, ordered = TRUE)
+prostate.cor = round(cor(subset(prostate.data, subset = train, select = 1:8)), digits = 3)
+prostate.cor[upper.tri(prostate.cor, diag = "TRUE")] = ""
+knitr::kable(prostate.cor[-1, -8])
+```
+
+## Table 3-2
+
+```{r}
+train.data = subset(prostate.data, subset = train, select = 1:9)
+# predictors need to be standardized
+lm.fit = lm(lpsa ~ ., data = train.data)
+```
+
 
 
 # Links
