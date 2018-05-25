@@ -43,8 +43,6 @@ Table 3-1
 
 ``` r
 prostate.data = ElemStatLearn::prostate
-#prostate.data$svi = factor(prostate.data$svi)
-#prostate.data$gleason = factor(prostate.data$gleason, ordered = TRUE)
 prostate.cor = round(cor(subset(prostate.data, subset = train, select = 1:8)), digits = 3)
 prostate.cor[upper.tri(prostate.cor, diag = "TRUE")] = ""
 knitr::kable(prostate.cor[-1, -8])
@@ -64,10 +62,29 @@ Table 3-2
 ---------
 
 ``` r
+#prostate.data$svi = factor(prostate.data$svi) 
+#prostate.data$gleason = factor(prostate.data$gleason, ordered = TRUE)
+#numerical.features = c("lcavol", "lweight", "age", "lbph", "lcp", "pgg45")
+prostate.data[-c(9, 10)] = scale(prostate.data[-c(9, 10)])
 train.data = subset(prostate.data, subset = train, select = 1:9)
-# predictors need to be standardized
-lm.fit = lm(lpsa ~ ., data = train.data)
+test.data = subset(prostate.data, subset = !train, select = 1:9)
+lm.model = lm(lpsa ~ ., data = train.data)
+knitr::kable(summary(lm.model)$coefficients[, -4], digits = 2)
 ```
+
+|             |  Estimate|  Std. Error|  t value|
+|-------------|---------:|-----------:|--------:|
+| (Intercept) |      2.46|        0.09|    27.60|
+| lcavol      |      0.68|        0.13|     5.37|
+| lweight     |      0.26|        0.10|     2.75|
+| age         |     -0.14|        0.10|    -1.40|
+| lbph        |      0.21|        0.10|     2.06|
+| svi         |      0.31|        0.12|     2.47|
+| lcp         |     -0.29|        0.15|    -1.87|
+| gleason     |     -0.02|        0.15|    -0.15|
+| pgg45       |      0.27|        0.15|     1.74|
+
+To reproduce exactly the results from the book we need to standardize all predictor variables. Note that we also standardize **svi** (a factor / dummy variable) and **gleason** (a ordered categorical variable) which seems odd but is suggested for the regularization method that is used below (see [Tibshirani (1997) The LASSO method](http://statweb.stanford.edu/~tibs/lasso/fulltext.pdf)).
 
 Links
 =====
