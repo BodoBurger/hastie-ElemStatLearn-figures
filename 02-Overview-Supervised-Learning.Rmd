@@ -16,9 +16,6 @@ knitr::opts_chunk$set(echo = TRUE,
 set.seed(123)
 library("mlr")
 library("ggplot2")
-#library("directlabels") # automatic label positioning in ggplot
-#library("ggforce") # drawing circles in ggplot
-#library("gridExtra") # arrange multiple plots
 theme_set(theme_light())
 ```
 

@@ -8,6 +8,15 @@ You find the figures along with the R code in the following notebooks:
 1. [Introduction](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/01-Introduction.md)
 2. [Overview of Supervised Learning](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/02-Overview-Supervised-Learning.md)
 
+The notebooks depend on the following **R** packags:
+
+``` r
+install.packages(c("ElemStatLearn", "knitr", "ggplot2", "mlr", "directlabels", "ggforce", "gridExtra", "mvtnorm", "reshape2", "scales"))
+#library("mlr") # machine learning in R
+#library("directlabels") # automatic label positioning in ggplot
+#library("ggforce") # drawing circles in ggplot
+#library("gridExtra") # arrange multiple plots
+```
 
 ## Links
 - general:
