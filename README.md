@@ -7,6 +7,8 @@ You find the figures along with the R code in the following notebooks:
 
 1. [Introduction](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/01-Introduction.md)
 2. [Overview of Supervised Learning](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/02-Overview-Supervised-Learning.md)
+3. [Linear Methods for Regression](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/03-Linear-Methods-for-Regression.md)
+10. [Boosting and Additive Trees](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/10-Boosting-and-Additive-Trees.md)
 
 The notebooks depend on the following **R** packags:
 
