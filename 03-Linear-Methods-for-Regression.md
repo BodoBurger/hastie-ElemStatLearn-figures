@@ -7,6 +7,8 @@ Bodo Burger
     -   [Figure 3-3 tail probabilities](#figure-3-3-tail-probabilities)
     -   [Table 3-1](#table-3-1)
     -   [Table 3-2](#table-3-2)
+-   [Subset Selection](#subset-selection)
+    -   [Figure 3-5 all subset models for prostate cancer example](#figure-3-5-all-subset-models-for-prostate-cancer-example)
 -   [Links](#links)
 
 ``` r
@@ -16,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE,
 set.seed(123)
 library("mlr")
 library("ggplot2")
+library("leaps")
 theme_set(theme_light())
 ```
 
@@ -36,7 +39,7 @@ abline(v = qt(c(.975, .995), df = 100), lty = 2, lwd = .5, col = "deepskyblue")
 abline(v = qnorm(c(.975, .995)), lty = 2, lwd = .5, col = "aquamarine3")
 ```
 
-![](figures/figure-3-3-tail-probabilities-1.png)
+![](figures/figure-03-03-tail-probabilities-1.png)
 
 Table 3-1
 ---------
@@ -85,6 +88,31 @@ knitr::kable(summary(lm.model)$coefficients[, -4], digits = 2)
 | pgg45       |      0.27|        0.15|     1.74|
 
 To reproduce exactly the results from the book we need to standardize all predictor variables. Note that we also standardize **svi** (a factor / dummy variable) and **gleason** (a ordered categorical variable) which seems odd but is suggested for the regularization method that is used below (see [Tibshirani (1997) The LASSO method](http://statweb.stanford.edu/~tibs/lasso/fulltext.pdf)).
+
+Subset Selection
+================
+
+``` r
+leaps.model = regsubsets(lpsa ~ ., data = train.data, nbest = 70, really.big = TRUE)
+prostate.models = summary(leaps.model)$which
+prostate.models.size = as.numeric(attr(prostate.models, "dimnames")[[1]])
+prostate.models.rss = summary(leaps.model)$rss
+prostate.models.best.rss = tapply(prostate.models.rss, prostate.models.size, min)
+prostate.intercept.model = lm(lpsa ~ 1, data = train.data)
+prostate.models.best.rss = c(sum(residuals(prostate.intercept.model)^2), prostate.models.best.rss)
+```
+
+Figure 3-5 all subset models for prostate cancer example
+--------------------------------------------------------
+
+``` r
+ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
+  geom_point(mapping = aes(x = prostate.models.size, y = prostate.models.rss), col = "slategray") + 
+  geom_point(col = "red", size = 2) + geom_line(col = "red") +
+  coord_cartesian(ylim = c(0, 100)) + xlab("Subset Size k") + ylab("Residual Sum-of-Squares")
+```
+
+![](figures/figure-03-05-subset-models-1.png)
 
 Links
 =====

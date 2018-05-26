@@ -10,14 +10,15 @@ You find the figures along with the R code in the following notebooks:
 3. [Linear Methods for Regression](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/03-Linear-Methods-for-Regression.md)
 10. [Boosting and Additive Trees](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/10-Boosting-and-Additive-Trees.md)
 
-The notebooks depend on the following **R** packags:
+The notebooks depend on the following **R** packages:
 
 ``` r
-install.packages(c("ElemStatLearn", "knitr", "ggplot2", "mlr", "directlabels", "ggforce", "gridExtra", "mvtnorm", "reshape2", "scales"))
+install.packages(c("ElemStatLearn", "knitr", "ggplot2", "mlr", "directlabels", "ggforce", "gridExtra", "mvtnorm", "reshape2", "scales", "leaps"))
 #library("mlr") # machine learning in R
 #library("directlabels") # automatic label positioning in ggplot
 #library("ggforce") # drawing circles in ggplot
 #library("gridExtra") # arrange multiple plots
+#library("leaps") # Regression Subset Selection
 ```
 
 ## Links
