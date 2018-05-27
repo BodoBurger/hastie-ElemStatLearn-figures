@@ -70,20 +70,24 @@ We start with a 15-nearest-neighbor model.
 tsk2 = makeClassifTask(data = data.frame(df[,1:2], y = factor(df$y)), target = "y")
 lrn.knn15 = makeLearner("classif.knn", k = 15)
 mod.knn15 = train(lrn.knn15, tsk2)
-y.hat = getPredictionResponse(predict(mod.knn15, newdata = grid[, -3]))
-grid["y.knn15"] = y.hat
 ```
 
 ```{r plot-bivariate-binary-classification}
-Plot2DBinaryClassification = function(target) {
+Plot2DBinaryClassification = function(task, model, grid.res = 100) {
+  data = getTaskData(task, target.extra = TRUE)
+  x1 = data$data[, 1]
+  x2 = data$data[, 2]
+  grid = expand.grid(x1 = seq(min(x1), max(x1), length.out = grid.res), 
+    x2 = seq(min(x2), max(x2), length.out = grid.res))
+  y.hat = getPredictionResponse(predict(model, newdata = grid))
   ggplot() + 
-    geom_point(aes(x = grid$x1, y = grid$x2, col = grid[,target]),
-               shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
-    geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid[,target])), col = "black", bins = 1) +
-    geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)),
-               shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
+    geom_point(aes(x = grid$x1, y = grid$x2, col = y.hat), shape = 20, size = .05, alpha = .5,
+      show.legend = FALSE) +
+    geom_contour(aes(grid$x1, grid$x2, z = as.numeric(y.hat)), col = "black", bins = 1) +
+    geom_point(aes(x = x1, y = x2, col = data$target), shape = "o", size = 4, stroke = 2,
+      show.legend = FALSE) +
     scale_colour_manual(values = c("deepskyblue", "orange")) +
-    theme_void()  
+    xlab(names(data$data)[1]) + ylab(names(data$data)[2])
 }
 ```
 
@@ -91,7 +95,7 @@ Plot2DBinaryClassification = function(target) {
 ## Figure 2-2 Classification using 15-nearest-neighbors
 
 ```{r figure-2-2-knn15, fig.asp=1}
-Plot2DBinaryClassification("y.knn15")
+Plot2DBinaryClassification(task = tsk2, model = mod.knn15) + theme_void()
 ```
 
 Now we train a 1-nearest-neighbor model.
@@ -99,14 +103,12 @@ Now we train a 1-nearest-neighbor model.
 ```{r}
 lrn.knn1 = setHyperPars(lrn.knn15, k = 1)
 mod.knn1 = train(lrn.knn1, tsk2)
-y.hat = getPredictionResponse(predict(mod.knn1, newdata = grid[, 1:2]))
-grid["y.knn1"] = y.hat
 ```
 
 ## Figure 2-3 Classification using 1-nearest-neighbor
 
 ```{r figure-2-3-knn1, fig.asp=1}
-Plot2DBinaryClassification("y.knn1")
+Plot2DBinaryClassification(task = tsk2, model = mod.knn1)
 ```
 
 # Test error for k-nearest-neighbors
@@ -525,9 +527,7 @@ ggplot(data = p2.data, mapping = aes(x = x, y = y, group = group, col = group)) 
 ```{r figure-bonus-naive-bayes}
 lrn.nb = makeLearner("classif.naiveBayes")
 mod.nb = train(lrn.nb, tsk2)
-y.hat = getPredictionResponse(predict(mod.nb, newdata = grid[, 1:2]))
-grid["y.nb"] = y.hat
-Plot2DBinaryClassification("y.nb")
+Plot2DBinaryClassification(tsk2, mod.nb)
 ```
 
 # Bonus figure: 67-nearest-neighbors
@@ -537,9 +537,7 @@ The degrees of freedom for k-nearest-neighbors is given by $\frac{n}{k}$.
 ```{r figure-bonus-knn67, fig.asp=1}
 lrn.knn67 = setHyperPars(lrn.knn15, k = 67)
 mod.knn67 = train(lrn.knn67, tsk2)
-y.hat = getPredictionResponse(predict(mod.knn67, newdata = grid[, 1:2]))
-grid["y.knn67"] = y.hat
-Plot2DBinaryClassification("y.knn67")
+Plot2DBinaryClassification(tsk2, mod.knn67)
 ```
 
 
