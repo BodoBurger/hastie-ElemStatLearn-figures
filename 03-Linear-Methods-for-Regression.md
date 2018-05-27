@@ -13,7 +13,7 @@ Bodo Burger
 
 ``` r
 knitr::opts_chunk$set(echo = TRUE, message = FALSE,
-                      cache = TRUE, cache.path = "cache/",
+                      cache = TRUE, cache.path = "cache/chapter03/",
                       fig.path = "figures/")
 set.seed(123)
 library("mlr")
