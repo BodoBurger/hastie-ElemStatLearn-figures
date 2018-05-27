@@ -24,7 +24,7 @@ Bodo Burger
 ``` r
 knitr::opts_chunk$set(echo = TRUE,
                       cache = TRUE,
-                      cache.path = "cache/",
+                      cache.path = "cache/chapter02/",
                       message = FALSE,
                       fig.path = "figures/")
 set.seed(123)
@@ -92,7 +92,7 @@ Figure 2-1 Classification using linear regression
 -------------------------------------------------
 
 ``` r
-ggplot(show.legend = FALSE) + 
+ggplot() + 
   geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.lm), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
   geom_line(aes(x = grid$x1, y = db(grid$x1))) +
   geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
@@ -115,16 +115,24 @@ y.hat = getPredictionResponse(predict(mod.knn15, newdata = grid[, -3]))
 grid["y.knn15"] = y.hat
 ```
 
+``` r
+Plot2DBinaryClassification = function(target) {
+  ggplot() + 
+    geom_point(aes(x = grid$x1, y = grid$x2, col = grid[,target]),
+               shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
+    geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid[,target])), col = "black", bins = 1) +
+    geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)),
+               shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
+    scale_colour_manual(values = c("deepskyblue", "orange")) +
+    theme_void()  
+}
+```
+
 Figure 2-2 Classification using 15-nearest-neighbors
 ----------------------------------------------------
 
 ``` r
-ggplot(show.legend = FALSE) + 
-  geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.knn15), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
-  geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.knn15)), col = "black", bins = 1) +
-  geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
-  scale_colour_manual(values = c("deepskyblue", "orange")) +
-  theme_void()
+Plot2DBinaryClassification("y.knn15")
 ```
 
 ![](figures/figure-2-2-knn15-1.png)
@@ -142,12 +150,7 @@ Figure 2-3 Classification using 1-nearest-neighbor
 --------------------------------------------------
 
 ``` r
-ggplot(show.legend = FALSE) + 
-  geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.knn1), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
-  geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.knn1)), col = "black", bins = 1) +
-  geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
-  scale_colour_manual(values = c("deepskyblue", "orange")) +
-  theme_void()
+Plot2DBinaryClassification("y.knn1")
 ```
 
 ![](figures/figure-2-3-knn1-1.png)
@@ -527,11 +530,11 @@ train.df = data.frame(x = x[train.indices], y = y[train.indices])
 test.df = data.frame(x = x[!train.indices], y = y[!train.indices])
 
 #
-grid = data.frame(x = seq(0, 6, .01))
+grid.x = data.frame(x = seq(0, 6, .01))
 plot(x, y, pch = "+", col = rgb(0, 0, 0, alpha = .5))
-lines(grid$x, target.fun(grid$x), col = "red", lwd = 2)
+lines(grid.x$x, target.fun(grid.x$x), col = "red", lwd = 2)
 test.fit = lm(y ~ poly(x, 12, raw = TRUE), data = train.df)
-lines(grid$x, predict(object = test.fit, newdata = data.frame(x = grid$x)), col = "blue")
+lines(grid.x$x, predict(object = test.fit, newdata = data.frame(x = grid.x$x)), col = "blue")
 ```
 
 ![](figures/figure-2-11-data-1.png)
@@ -578,14 +581,14 @@ fit1 = lm(y ~ poly(x, 1, raw = TRUE), data = train.df)
 fit7 = lm(y ~ poly(x, 7, raw = TRUE), data = train.df)
 fit20 = lm(y ~ poly(x, 20, raw = TRUE), data = train.df)
 
-p2.data = data.frame(x = grid$x, 
-                     target.fun = target.fun(grid$x),
-                     linear = predict(fit1, newdata = grid),
-                     poly7 = predict(fit7, newdata = grid),
-                     poly20 = predict(fit20, newdata = grid))
+p2.data = data.frame(x = grid.x$x, 
+                     target.fun = target.fun(grid.x$x),
+                     linear = predict(fit1, newdata = grid.x),
+                     poly7 = predict(fit7, newdata = grid.x),
+                     poly20 = predict(fit20, newdata = grid.x))
 ```
 
-    ## Warning in predict.lm(fit20, newdata = grid): prediction from a rank-
+    ## Warning in predict.lm(fit20, newdata = grid.x): prediction from a rank-
     ## deficient fit may be misleading
 
 ``` r
@@ -605,11 +608,7 @@ lrn.nb = makeLearner("classif.naiveBayes")
 mod.nb = train(lrn.nb, tsk2)
 y.hat = getPredictionResponse(predict(mod.nb, newdata = grid[, 1:2]))
 grid["y.nb"] = y.hat
-ggplot(show.legend = FALSE) + 
-  geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.nb), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
-  geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.nb)), col = "black", bins = 1) +
-  geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
-  scale_colour_manual(values = c("deepskyblue", "orange")) + theme_void()
+Plot2DBinaryClassification("y.nb")
 ```
 
 ![](figures/figure-bonus-naive-bayes-1.png)
@@ -624,11 +623,7 @@ lrn.knn67 = setHyperPars(lrn.knn15, k = 67)
 mod.knn67 = train(lrn.knn67, tsk2)
 y.hat = getPredictionResponse(predict(mod.knn67, newdata = grid[, 1:2]))
 grid["y.knn67"] = y.hat
-ggplot(show.legend = FALSE) + 
-  geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.knn67), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
-  geom_contour(aes(grid$x1, grid$x2, z = as.numeric(grid$y.knn67)), col = "black", bins = 1) +
-  geom_point(aes(x = df$x1, y = df$x2, col = factor(df$y)), shape = "o", size = 4, stroke = 2, show.legend = FALSE) +
-  scale_colour_manual(values = c("deepskyblue", "orange")) + theme_void()
+Plot2DBinaryClassification("y.knn67")
 ```
 
 ![](figures/figure-bonus-knn67-1.png)
