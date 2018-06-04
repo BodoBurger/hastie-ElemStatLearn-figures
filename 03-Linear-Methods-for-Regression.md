@@ -114,5 +114,38 @@ ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
 
 ![](figures/figure-03-05-subset-models-1.png)
 
+The data generating process for Figure 3.6 is described in its subtitle in the book. The estimates are are averaged over 50 simulations
+
+``` r
+n = 300
+p = 31
+generateData = function(n, p) {
+  # features X:
+  mu = rep(0, p)
+  sigma = matrix(.85, ncol = p, nrow = p) + diag(.15, p)
+  X = mvtnorm::rmvnorm(n, mean = mu, sigma = sigma)
+  # coefficients b:
+  b = numeric(p)
+  b[sample(p, 10)] = rnorm(10, 0, .4)
+  # noise eps:
+  eps = rnorm(1, 0, 6.25)
+  # target y:
+  y = X %*% b + eps
+  # data.frame
+  df = data.frame(y, X)
+  return(list(data = df, y = y, X = X, b = b, eps = eps))
+}
+dgp = generateData(300, 31)
+y = dgp$X %*% dgp$b
+hist(y)
+hist(dgp$y)
+dgp$eps
+
+bestsub.model = regsubsets(y ~ ., data = dgp$data, really.big = TRUE)
+forstep
+backstep
+forstage.model
+```
+
 Links
 =====
