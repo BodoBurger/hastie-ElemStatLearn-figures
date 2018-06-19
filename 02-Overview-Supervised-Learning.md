@@ -163,16 +163,17 @@ Test error for k-nearest-neighbors
 Now we want to know the test error of the k-nearest-neighbor algorithm for different values of k. For reliable results we need more data. The book describes in detail how the data was simulated (also see documentation of mixture.example dataset).
 
 ``` r
+set.seed(1986)
 means.indices = c(sample(1:10, 5000, replace = TRUE), sample(11:20, 5000, replace = TRUE))
 X = me$means[means.indices, ] + mvtnorm::rmvnorm(10000, rep(0, 2), .2 * diag(2))
 df.test = data.frame(x1 = X[ , 1], x2 = X[ , 2], y = c(rep(0, 5000), rep(1, 5000)))
 knitr::kable(df.test[c(1, 10000), ]) # show first and last simulated point
 ```
 
-|       |          x1|         x2|    y|
-|-------|-----------:|----------:|----:|
-| 1     |  -0.0101802|  0.3120567|    0|
-| 10000 |  -0.9336943|  0.5191334|    1|
+|       |         x1|          x2|    y|
+|-------|----------:|-----------:|----:|
+| 1     |  3.1590572|   1.2697039|    0|
+| 10000 |  0.8279017|  -0.2248907|    1|
 
 MLR makes tuning very convenient. We could use more advanced techniques to measure the test error but the book uses a simple holdout test set at this point with a very high test set split rate of .98 (200 training samples vs 10000 test samples).
 
