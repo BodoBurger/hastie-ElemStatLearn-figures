@@ -9,6 +9,7 @@ Bodo Burger
     -   [Table 3-2](#table-3-2)
 -   [Subset Selection](#subset-selection)
     -   [Figure 3-5 all subset models for prostate cancer example](#figure-3-5-all-subset-models-for-prostate-cancer-example)
+    -   [Figure 3-6 comparison of subset techniques](#figure-3-6-comparison-of-subset-techniques)
 -   [Links](#links)
 
 ``` r
@@ -18,7 +19,6 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE,
 set.seed(123)
 library("mlr")
 library("ggplot2")
-library("leaps")
 theme_set(theme_light())
 ```
 
@@ -92,8 +92,10 @@ To reproduce exactly the results from the book we need to standardize all predic
 Subset Selection
 ================
 
+The dataset has 8 features. The number of combination for subset size k is $\\binom{8}{k}$; for *k* = 4 we reach the maximum number of combinations $\\binom{8}{4} = 70$, so if we set `nbest = 70` we store each possible combination of the feature set.
+
 ``` r
-leaps.model = regsubsets(lpsa ~ ., data = train.data, nbest = 70, really.big = TRUE)
+leaps.model = leaps::regsubsets(lpsa ~ ., data = train.data, nbest = 70, really.big = TRUE)
 prostate.models = summary(leaps.model)$which
 prostate.models.size = as.numeric(attr(prostate.models, "dimnames")[[1]])
 prostate.models.rss = summary(leaps.model)$rss
@@ -126,26 +128,33 @@ generateData = function(n, p) {
   X = mvtnorm::rmvnorm(n, mean = mu, sigma = sigma)
   # coefficients b:
   b = numeric(p)
-  b[sample(p, 10)] = rnorm(10, 0, .4)
+  non.zero = sample(p, 10) # indices of non-zero coefficients
+  b[non.zero] = rnorm(10, 0, .4)
   # noise eps:
-  eps = rnorm(1, 0, 6.25)
+  eps = rnorm(n, 0, 6.25)
   # target y:
   y = X %*% b + eps
   # data.frame
   df = data.frame(y, X)
-  return(list(data = df, y = y, X = X, b = b, eps = eps))
+  return(list(data = df, y = y, X = X, b = b, eps = eps, non.zero = non.zero))
 }
+set.seed(1990)
 dgp = generateData(300, 31)
 y = dgp$X %*% dgp$b
 hist(y)
 hist(dgp$y)
 dgp$eps
 
-bestsub.model = regsubsets(y ~ ., data = dgp$data, really.big = TRUE)
-forstep
-backstep
+bestsub.model = leaps::regsubsets(y ~ ., data = dgp$data, method = "exhaustive", nbest = 70, really.big = TRUE)
+forstep.model = leaps::regsubsets(y ~ ., data = dgp$data, method = "forward")
+backstep.model
 forstage.model
+
+ method=c("exhaustive", "backward", "forward", "seqrep"),
 ```
+
+Figure 3-6 comparison of subset techniques
+------------------------------------------
 
 Links
 =====
