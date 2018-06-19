@@ -100,7 +100,7 @@ ggplot() +
   theme_void()
 ```
 
-![](figures/figure-2-1-lm-1.png)
+![](figures/figure-02-01-lm-1.png)
 
 Nearest-Neighbors Method
 ========================
@@ -139,7 +139,7 @@ Figure 2-2 Classification using 15-nearest-neighbors
 Plot2DBinaryClassification(task = tsk2, model = mod.knn15) + theme_void()
 ```
 
-![](figures/figure-2-2-knn15-1.png)
+![](figures/figure-02-02-knn15-1.png)
 
 Now we train a 1-nearest-neighbor model.
 
@@ -155,7 +155,7 @@ Figure 2-3 Classification using 1-nearest-neighbor
 Plot2DBinaryClassification(task = tsk2, model = mod.knn1)
 ```
 
-![](figures/figure-2-3-knn1-1.png)
+![](figures/figure-02-03-knn1-1.png)
 
 Test error for k-nearest-neighbors
 ==================================
@@ -225,13 +225,13 @@ ggplot(data = plot.data, aes(x = k, y = value, group = variable, col = variable)
   ylab("Missclassification error") + theme(legend.position="bottom")
 ```
 
-![](figures/figure-2-4-test-error-1.png)
+![](figures/figure-02-04-test-error-1.png)
 
 <!-- TODO -->
 <!-- # Statistical Decision Theory -->
 <!-- *Check solutions for Exercise 2.2.* -->
 <!-- ## Figure 2-5 optimal Bayes decision boundary -->
-<!-- ```{r figure-2-5-optimal-bayes, fig.asp=1} -->
+<!-- ```{r figure-02-05-optimal-bayes, fig.asp=1} -->
 <!-- ``` -->
 Local Methods in High Dimensions
 ================================
@@ -254,7 +254,7 @@ ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquam
   geom_vline(data = data.frame(x = c(.1, .3)), aes(xintercept = x), linetype = "dashed", col = "deepskyblue", alpha = .5)
 ```
 
-![](figures/figure-2-6-curse-1.png)
+![](figures/figure-02-06-curse-1.png)
 
 For the following figure we simulate the uniformly distributed data over 10 dimensions.
 
@@ -296,7 +296,7 @@ ggplot(data = example.2d, mapping = aes(x = x1, y = x2)) +
   ggtitle("Nearest neighbor for 10 observations and two dimensions")
 ```
 
-![](figures/figure-2-7-data-1.png)
+![](figures/figure-02-07-data-1.png)
 
 ``` r
 bl.data = data.frame(Dimension = 1:p, AverageDistance = rep(0, p), 
@@ -395,7 +395,7 @@ br = ggplot(data = br.data, mapping = aes(x = Dimension, y = value, group = grp,
 gridExtra::grid.arrange(tl, tr, bl, br, nrow = 2, ncol = 2)
 ```
 
-![](figures/figure-2-7-1.png)
+![](figures/figure-02-07-1.png)
 
 It would be interesting to know why squared bias and MSE in the bottom-right panel deviate quite a lot from the book. I have no answer to that at the moment.
 
@@ -452,7 +452,7 @@ rp = ggplot(data = rp.data, mapping = aes(x = Dimension, y = value, group = grp,
 gridExtra::grid.arrange(lp, rp, nrow = 1)
 ```
 
-![](figures/figure-2-8-1.png)
+![](figures/figure-02-08-1.png)
 
 Figure 2-9
 ----------
@@ -511,7 +511,7 @@ ggplot(data = p.data, mapping = aes(x = Dimension, y = value, group = grp, colou
   ggtitle("Expected Prediction Error of 1NN vs. OLS")
 ```
 
-![](figures/figure-2-9-1.png)
+![](figures/figure-02-09-1.png)
 
 Model Selection and the Bias-Variance Tradeoff
 ==============================================
@@ -540,7 +540,7 @@ test.fit = lm(y ~ poly(x, 12, raw = TRUE), data = train.df)
 lines(grid.x$x, predict(object = test.fit, newdata = data.frame(x = grid.x$x)), col = "blue")
 ```
 
-![](figures/figure-2-11-data-1.png)
+![](figures/figure-02-11-data-1.png)
 
 ``` r
 #
@@ -575,7 +575,7 @@ ggplot(data = p.data, mapping = aes(x = factor(k), y = error, group = grp, color
   theme(legend.title = element_blank(), legend.position = c(.5, .7))
 ```
 
-![](figures/figure-2-11-1.png)
+![](figures/figure-02-11-1.png)
 
 Polynomial of degree 7 seems to be the sweet spot.
 
@@ -601,7 +601,7 @@ ggplot(data = p2.data, mapping = aes(x = x, y = y, group = group, col = group)) 
   coord_cartesian(ylim = c(-7, 6))
 ```
 
-![](figures/figure-2-11-compare-poly-1.png)
+![](figures/figure-02-11-compare-poly-1.png)
 
 Bonus figure: naive Bayes classifier
 ====================================
@@ -612,7 +612,7 @@ mod.nb = train(lrn.nb, tsk2)
 Plot2DBinaryClassification(tsk2, mod.nb)
 ```
 
-![](figures/figure-bonus-naive-bayes-1.png)
+![](figures/figure-bonus-02-naive-bayes-1.png)
 
 Bonus figure: 67-nearest-neighbors
 ==================================
@@ -625,7 +625,7 @@ mod.knn67 = train(lrn.knn67, tsk2)
 Plot2DBinaryClassification(tsk2, mod.knn67)
 ```
 
-![](figures/figure-bonus-knn67-1.png)
+![](figures/figure-bonus-02-knn67-1.png)
 
 Links
 =====

@@ -53,7 +53,7 @@ db = function(x1, coef = beta) {
 
 ## Figure 2-1 Classification using linear regression
 
-```{r figure-2-1-lm, fig.asp=1}
+```{r figure-02-01-lm, fig.asp=1}
 ggplot() + 
   geom_point(aes(x = grid$x1, y = grid$x2, col = grid$y.lm), shape = 20, size = .05, alpha = .5, show.legend = FALSE) +
   geom_line(aes(x = grid$x1, y = db(grid$x1))) +
@@ -94,7 +94,7 @@ Plot2DBinaryClassification = function(task, model, grid.res = 100) {
 
 ## Figure 2-2 Classification using 15-nearest-neighbors
 
-```{r figure-2-2-knn15, fig.asp=1}
+```{r figure-02-02-knn15, fig.asp=1}
 Plot2DBinaryClassification(task = tsk2, model = mod.knn15) + theme_void()
 ```
 
@@ -107,7 +107,7 @@ mod.knn1 = train(lrn.knn1, tsk2)
 
 ## Figure 2-3 Classification using 1-nearest-neighbor
 
-```{r figure-2-3-knn1, fig.asp=1}
+```{r figure-02-03-knn1, fig.asp=1}
 Plot2DBinaryClassification(task = tsk2, model = mod.knn1)
 ```
 
@@ -155,7 +155,7 @@ test.error.lm = 1 - mean(y.hat[201:10200] ==  df.test$y)
 <!-- And bayes error rate. -->
 <!-- performance(predict(mod.nb, newdata = df.full[201:10200, ])) -->
 
-```{r figure-2-4-test-error, fig.asp=1}
+```{r figure-02-04-test-error, fig.asp=1}
 plot.data = data.frame(k, train = results$data$mmce.train.mean, test = results$data$mmce.test.mean)
 plot.data = reshape2::melt(plot.data, id = "k")
 ggplot(data = plot.data, aes(x = k, y = value, group = variable, col = variable)) +
@@ -180,7 +180,7 @@ ggplot(data = plot.data, aes(x = k, y = value, group = variable, col = variable)
 
 <!-- ## Figure 2-5 optimal Bayes decision boundary -->
 
-<!-- ```{r figure-2-5-optimal-bayes, fig.asp=1} -->
+<!-- ```{r figure-02-05-optimal-bayes, fig.asp=1} -->
 
 <!-- ``` -->
 
@@ -198,7 +198,7 @@ curse.data['Distance'] = unlist(Map(e, curse.data$r, curse.data$p))
 
 ## Figure 2-6 Curse of dimensionality
 
-```{r figure-2-6-curse, fig.asp=1}
+```{r figure-02-06-curse, fig.asp=1}
 ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquamarine3", size = .6) +
   xlab("Fraction of Volume") + xlim(c(0, .65)) + scale_y_continuous(breaks=seq(0, 1, 0.2)) +
   directlabels::geom_dl(aes(label = paste0(" p = ", as.character(p))), method = "last.points") +
@@ -207,7 +207,7 @@ ggplot(curse.data, aes(x = r, y = Distance, group = p)) + geom_line(col = "aquam
 
 For the following figure we simulate the uniformly distributed data over 10 dimensions.
 
-```{r figure-2-7-data, fig.asp=1}
+```{r figure-02-07-data, fig.asp=1}
 simulateData = function(p = 10, n = 1000) replicate(p, runif(n, -1, 1))
 
 target.fun = function(x) exp(-8 * norm(matrix(x, ncol = 1))^2)
@@ -302,7 +302,7 @@ The bias-variance decomposition panel is the most complicated. We have to calcul
 
 ## Figure 2-7
 
-```{r figure-2-7, fig.asp=1}
+```{r figure-02-07, fig.asp=1}
 tl = ggplot(data.frame(x = grid.tl, y = sapply(grid.tl, target.fun)), aes(x, y)) +
   geom_line(col = "green") +
   geom_rug(data = data.frame(x = d1.10, grp = factor(nn0 == d1.10)), aes(x = x, y = NULL, col = grp),
@@ -343,7 +343,7 @@ It would be interesting to know why squared bias and MSE in the bottom-right pan
 
 For Figure 2-8 the target function is constant in all but one dimension.
 
-```{r figure-2-8-data}
+```{r figure-02-08-data}
 target.fun = function(x) .5 * (matrix(x[1], ncol = 1) + 1)^3
 
 # left panel:
@@ -373,7 +373,7 @@ rp.data = data.frame(Dimension = rep(1:10, 3),
 
 ## Figure 2-8
 
-```{r figure-2-8, fig.asp=.5}
+```{r figure-02-08, fig.asp=.5}
 lp = ggplot(data.frame(x = grid.tl, y = sapply(grid.tl, target.fun)), aes(x, y)) +
   geom_line(col = "deepskyblue") +
   geom_rug(data = data.frame(x = d1.10, grp = factor(nn0 == d1.10)), aes(x = x, y = NULL, col = grp),
@@ -395,7 +395,7 @@ gridExtra::grid.arrange(lp, rp, nrow = 1)
 
 ## Figure 2-9
 
-```{r figure-2-9-data}
+```{r figure-02-09-data}
 p = 10
 n = 500
 simulateData = function(p = 10, n = 500) replicate(p, runif(n, -1, 1))
@@ -439,7 +439,7 @@ p.data = data.frame(Dimension = rep(1:10, 2),
 
 Obviously, figure 2-9 is off. Find the mistake! ;)
 
-```{r figure-2-9, fig.asp=.5}
+```{r figure-02-09, fig.asp=.5}
 ggplot(data = p.data, mapping = aes(x = Dimension, y = value, group = grp, colour = grp)) +
   geom_point() + geom_line() +
   scale_colour_manual(values = c("deepskyblue", "orange")) +
@@ -453,7 +453,7 @@ ggplot(data = p.data, mapping = aes(x = Dimension, y = value, group = grp, colou
 
 Figure 2-11 is reproduced by an actual example.
 
-```{r figure-2-11-data, message=FALSE, warning=FALSE}
+```{r figure-02-11-data, message=FALSE, warning=FALSE}
 # data generating process
 n = 100
 target.fun = function(x) 5 * sin(2 * x) + 2 * cos(x + 1)
@@ -498,7 +498,7 @@ p.data = data.frame(k = rep(1:k, 2), error = c(rowMeans(train.errors), rowMeans(
 
 ## Figure 2-11
 
-```{r figure-2-11}
+```{r figure-02-11}
 ggplot(data = p.data, mapping = aes(x = factor(k), y = error, group = grp, color = grp)) +
   geom_point(size = 2) + geom_line(alpha = .2) + coord_cartesian(ylim = c(0, 30)) +
   xlab("Model Complexity") + ylab("Prediction Error") + 
@@ -507,7 +507,7 @@ ggplot(data = p.data, mapping = aes(x = factor(k), y = error, group = grp, color
 
 Polynomial of degree 7 seems to be the sweet spot.
 
-```{r figure-2-11-compare-poly}
+```{r figure-02-11-compare-poly}
 fit1 = lm(y ~ poly(x, 1, raw = TRUE), data = train.df)
 fit7 = lm(y ~ poly(x, 7, raw = TRUE), data = train.df)
 fit20 = lm(y ~ poly(x, 20, raw = TRUE), data = train.df)
@@ -525,7 +525,7 @@ ggplot(data = p2.data, mapping = aes(x = x, y = y, group = group, col = group)) 
 
 # Bonus figure: naive Bayes classifier
 
-```{r figure-bonus-naive-bayes}
+```{r figure-bonus-02-naive-bayes}
 lrn.nb = makeLearner("classif.naiveBayes")
 mod.nb = train(lrn.nb, tsk2)
 Plot2DBinaryClassification(tsk2, mod.nb)
@@ -535,7 +535,7 @@ Plot2DBinaryClassification(tsk2, mod.nb)
 
 The degrees of freedom for k-nearest-neighbors is given by $\frac{n}{k}$.
 
-```{r figure-bonus-knn67, fig.asp=1}
+```{r figure-bonus-02-knn67, fig.asp=1}
 lrn.knn67 = setHyperPars(lrn.knn15, k = 67)
 mod.knn67 = train(lrn.knn67, tsk2)
 Plot2DBinaryClassification(tsk2, mod.knn67)
