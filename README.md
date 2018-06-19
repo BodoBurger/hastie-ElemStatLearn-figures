@@ -1,9 +1,9 @@
 # Figures from the Elements of Statistical Learning
-I tried to recreate all figures from the textbook The Elements of Statistical Learning (2nd edition) by Trevor Hastie, Robert Tibshirani, and Jerome Friedman with R using mainly ggplot2 and [mlr](https://github.com/mlr-org/mlr).
+I try to recreate all figures from the textbook The Elements of Statistical Learning (2nd edition) by Trevor Hastie, Robert Tibshirani, and Jerome Friedman with R using mainly ggplot2 and [mlr](https://github.com/mlr-org/mlr). 
 
 See https://web.stanford.edu/~hastie/ElemStatLearn/ where you can get a PDF of the book.
 
-You find the figures along with the R code in the following notebooks:
+For some figures you can find the code in the accompanying R package [ElemStatLearn](https://cran.r-project.org/web/packages/ElemStatLearn/index.html), but for many examples/figures in the book it is not immediately clear (at least it is/was for me) how they were produced. I hope it becomes more accessible via the following notebooks (though you still have to read the book to know what is going on):
 
 1. [Introduction](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/01-Introduction.md)
 2. [Overview of Supervised Learning](https://github.com/BodoBurger/hastie-ElemStatLearn-figures/blob/master/02-Overview-Supervised-Learning.md)
