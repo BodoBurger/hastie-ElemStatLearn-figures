@@ -20,6 +20,7 @@ set.seed(123)
 library("mlr")
 library("ggplot2")
 theme_set(theme_light())
+cbbPalette = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ```
 
 Linear Regression Models
@@ -116,19 +117,19 @@ ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
 
 ![](figures/figure-03-05-subset-models-1.png)
 
-The data generating process for Figure 3.6 is described in its subtitle in the book. The estimates are are averaged over 50 simulations
+The data generating process for Figure 3.6 is described in its subtitle in the book. The estimates are are averaged over several simulations.
 
 ``` r
-n = 300
-p = 31
-generateData = function(n, p) {
+n = 300 # number of observations
+p = 31 # number of features
+generateData = function(n, p) { # data generating process
   # features X:
   mu = rep(0, p)
   sigma = matrix(.85, ncol = p, nrow = p) + diag(.15, p)
   X = mvtnorm::rmvnorm(n, mean = mu, sigma = sigma)
   # coefficients b:
   b = numeric(p)
-  non.zero = sample(p, 10) # indices of non-zero coefficients
+  non.zero = sort(sample(p, 10)) # indices of non-zero coefficients
   b[non.zero] = rnorm(10, 0, .4)
   # noise eps:
   eps = rnorm(n, 0, 6.25)
@@ -138,23 +139,63 @@ generateData = function(n, p) {
   df = data.frame(y, X)
   return(list(data = df, y = y, X = X, b = b, eps = eps, non.zero = non.zero))
 }
+K = 20 # number of simulations
+bestsub.mse.matrix = matrix(numeric(1), nrow = K, ncol = p)
+forstep.mse.matrix = matrix(numeric(1), nrow = K, ncol = p)
+backstep.mse.matrix = matrix(numeric(1), nrow = K, ncol = p)
+forstage.mse.matrix = matrix(numeric(1), nrow = K, ncol = p)
 set.seed(1990)
-dgp = generateData(300, 31)
-y = dgp$X %*% dgp$b
-hist(y)
-hist(dgp$y)
-dgp$eps
 
-bestsub.model = leaps::regsubsets(y ~ ., data = dgp$data, method = "exhaustive", nbest = 70, really.big = TRUE)
-forstep.model = leaps::regsubsets(y ~ ., data = dgp$data, method = "forward")
-backstep.model
-forstage.model
-
- method=c("exhaustive", "backward", "forward", "seqrep"),
+for (k in 1:K) {
+  #cat("# Sim", k, "/", K, "#")
+  dgp = generateData(n, p)
+  b = dgp$b
+  names(b) = paste0("X", 1:31)
+  
+  bestsub.model = leaps::regsubsets(y ~ ., data = dgp$data, nbest = 1, nvmax = 300540195,
+    intercept = FALSE, method = "exhaustive", really.big = TRUE)
+  forstep.model = leaps::regsubsets(y ~ ., data = dgp$data, nbest = 1, nvmax = 31,
+    intercept = FALSE, method = "forward")
+  backstep.model = leaps::regsubsets(y ~ ., data = dgp$data, nbest = 1, nvmax = 31,
+    intercept = FALSE, method = "backward")
+  forstage.model = leaps::regsubsets(y ~ ., data = dgp$data, nbest = 1, nvmax = 31,
+    intercept = FALSE, method = "seqrep")
+  
+  for (i in 1:p) {
+    bestsub.hat = coef(bestsub.model, i)
+    bestsub.true = b[names(bestsub.hat)]
+    bestsub.mse.matrix[k, i] = mean((bestsub.hat - bestsub.true)^2)
+    forstep.hat = coef(forstep.model, i)
+    forstep.true = b[names(forstep.hat)]
+    forstep.mse.matrix[k, i] = mean((forstep.hat - forstep.true)^2)
+    backstep.hat = coef(backstep.model, i)
+    backstep.true = b[names(backstep.hat)]
+    backstep.mse.matrix[k, i] = mean((backstep.hat - backstep.true)^2)
+    forstage.hat = coef(forstage.model, i)
+    forstage.true = b[names(forstage.hat)]
+    forstage.mse.matrix[k, i] = mean((forstage.hat - forstage.true)^2)
+  }
+}
 ```
 
 Figure 3-6 comparison of subset techniques
 ------------------------------------------
+
+``` r
+df.plot = data.frame(k = 1:31,
+  BestSubset = colMeans(bestsub.mse.matrix),
+  ForwardStepwise = colMeans(forstep.mse.matrix),
+  BackwardStepwise = colMeans(backstep.mse.matrix),
+  ForwardStagewise = colMeans(forstage.mse.matrix))
+df.plot = reshape2::melt(df.plot, id.vars = "k", variable.name = "Method", value.name = "MSE")
+ggplot(data = df.plot, mapping = aes(x = k, y = MSE, color = Method)) +
+  geom_point(alpha = .6, size = 2) + geom_line(linetype = "dotted", alpha = .2) +
+  scale_colour_manual(values=cbbPalette) + xlab("Subset Size k") + ylab("MSE(beta.hat, beta.true)")
+```
+
+![](figures/figure-03-06-subset-techniques-1.png)
+
+According to the book the plot should show the "mean-squared error of the estimated coefficient *β*<sub>*k*</sub> at each step from the true *β*", but the results are not reproduced here. I do not know yet where my approach differs.
 
 Links
 =====
