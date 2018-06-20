@@ -516,43 +516,35 @@ ggplot(data = p.data, mapping = aes(x = Dimension, y = value, group = grp, colou
 Model Selection and the Bias-Variance Tradeoff
 ==============================================
 
-Figure 2-11 is reproduced by an actual example.
+Figure 2-11 in the book seems to be more like a theoretical sketch than the result of a simulation which is what we do here to illustrate the bias-variance tradeoff.
 
 ``` r
-# data generating process
 n = 100
 target.fun = function(x) 5 * sin(2 * x) + 2 * cos(x + 1)
 x = runif(n, 0, 6)
-eps = rnorm(n, 0, 1)
-y = target.fun(x) + eps
-
-# train / test set split
-ratio = .5
-train.indices = c(rep(TRUE, ratio * n), rep(FALSE, (1 - ratio) * n))
-train.df = data.frame(x = x[train.indices], y = y[train.indices])
-test.df = data.frame(x = x[!train.indices], y = y[!train.indices])
-
-#
+y = target.fun(x) + rnorm(n, 0, 1)
 grid.x = data.frame(x = seq(0, 6, .01))
 plot(x, y, pch = "+", col = rgb(0, 0, 0, alpha = .5))
 lines(grid.x$x, target.fun(grid.x$x), col = "red", lwd = 2)
-test.fit = lm(y ~ poly(x, 12, raw = TRUE), data = train.df)
-lines(grid.x$x, predict(object = test.fit, newdata = data.frame(x = grid.x$x)), col = "blue")
 ```
 
-![](figures/figure-02-11-data-1.png)
+![](figures/figure-02-11-dgp-1.png)
+
+The figure shows the *true* relationship and the observed, noisy data.
+
+We try to fit the data using polynomial regression. We increase the model complexity step by step (i.e. increasing the degree of the polynomial) and look at how train and test error evolve.
 
 ``` r
-#
-B = 1000
+B = 1000 # number of simulations
 mse = function(y, y.hat) mean((y - y.hat)^2)
-k = 12
+k = 12 # maximum degree of the polynomial we fit (model complexity)
+ratio = .5 # train / test set split ratio
+train.indices = c(rep(TRUE, ratio * n), rep(FALSE, (1 - ratio) * n))
 train.errors = matrix(nrow = k, ncol = B)
 test.errors = matrix(nrow = k, ncol = B)
 for (b in (1:B)) {
   x = runif(n, 0, 6)
-  eps = rnorm(n, 0, 1)
-  y = target.fun(x) + eps
+  y = target.fun(x) + rnorm(n, 0, 1)
   train.df = data.frame(x = x[train.indices], y = y[train.indices])
   test.df = data.frame(x = x[!train.indices], y = y[!train.indices])
   for (i in (1:k)) {
@@ -583,25 +575,20 @@ Polynomial of degree 7 seems to be the sweet spot.
 fit1 = lm(y ~ poly(x, 1, raw = TRUE), data = train.df)
 fit7 = lm(y ~ poly(x, 7, raw = TRUE), data = train.df)
 fit20 = lm(y ~ poly(x, 20, raw = TRUE), data = train.df)
-
 p2.data = data.frame(x = grid.x$x, 
                      target.fun = target.fun(grid.x$x),
                      linear = predict(fit1, newdata = grid.x),
                      poly7 = predict(fit7, newdata = grid.x),
                      poly20 = predict(fit20, newdata = grid.x))
-```
-
-    ## Warning in predict.lm(fit20, newdata = grid.x): prediction from a rank-
-    ## deficient fit may be misleading
-
-``` r
 p2.data = reshape2::melt(p2.data, id = "x", variable.name = "group", value.name = "y")
 ggplot(data = p2.data, mapping = aes(x = x, y = y, group = group, col = group)) +
-  geom_line(size = 1, alpha = .8) + geom_point(data = train.df, mapping = aes(x = x, y = y), inherit.aes = FALSE) +
-  coord_cartesian(ylim = c(-7, 6))
+  geom_line(size = 1, alpha = .8) + geom_point(data = train.df, mapping = aes(x = x, y = y), 
+    inherit.aes = FALSE) + coord_cartesian(ylim = c(-7, 6))
 ```
 
 ![](figures/figure-02-11-compare-poly-1.png)
+
+The simple linear model underfits, the polynomial of degree 20 overemphasizes the noise. The polynomial of degree 7 seems to be a reasonable choice here.
 
 Bonus figure: naive Bayes classifier
 ====================================
