@@ -20,8 +20,7 @@ cbbPalette = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 
 # Linear Regression Models
 
-
-## Figure 3-3 tail probabilities
+## Figure 3-3 Tail probabilities
 
 ```{r figure-03-03-tail-probabilities, fig.asp=.5}
 z = seq(1.9, 3, .01)
@@ -34,7 +33,7 @@ abline(v = qt(c(.975, .995), df = 100), lty = 2, lwd = .5, col = "deepskyblue")
 abline(v = qnorm(c(.975, .995)), lty = 2, lwd = .5, col = "aquamarine3")
 ```
 
-## Table 3-1
+## Table 3-1 Prostate data correlations
 
 ```{r}
 prostate.data = ElemStatLearn::prostate
@@ -43,7 +42,7 @@ prostate.cor[upper.tri(prostate.cor, diag = "TRUE")] = ""
 knitr::kable(prostate.cor[-1, -8])
 ```
 
-## Table 3-2
+## Table 3-2 Prostate data linear model
 
 ```{r}
 #prostate.data$svi = factor(prostate.data$svi) 
@@ -58,7 +57,10 @@ knitr::kable(summary(lm.model)$coefficients[, -4], digits = 2)
 
 To reproduce exactly the results from the book we need to standardize all predictor variables. Note that we also standardize **svi** (a factor / dummy variable) and **gleason** (a ordered categorical variable) which seems odd but is suggested for the regularization method that is used below (see [Tibshirani (1997) The LASSO method](http://statweb.stanford.edu/~tibs/lasso/fulltext.pdf)).
 
+
 # Subset Selection
+
+## Figure 3-5 All subset models for prostate cancer example
 
 The dataset has 8 features. The number of combination for subset size k is $\binom{8}{k}$; for 
 $k = 4$ we reach the maximum number of combinations $\binom{8}{4} = 70$, so if we set `nbest = 70`
@@ -74,8 +76,6 @@ prostate.intercept.model = lm(lpsa ~ 1, data = train.data)
 prostate.models.best.rss = c(sum(residuals(prostate.intercept.model)^2), prostate.models.best.rss)
 ```
 
-## Figure 3-5 all subset models for prostate cancer example
-
 ```{r figure-03-05-subset-models, fig.asp=.7}
 ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
   geom_point(mapping = aes(x = prostate.models.size, y = prostate.models.rss), col = "slategray") + 
@@ -83,7 +83,9 @@ ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
   coord_cartesian(ylim = c(0, 100)) + xlab("Subset Size k") + ylab("Residual Sum-of-Squares")
 ```
 
-The data generating process for Figure 3.6 is described in its subtitle in the book. The estimates are are averaged over several simulations.
+## Figure 3-6 Comparison of subset techniques
+
+The data generating process for Figure 3.6 is described in its subtitle. The estimates are averaged over several simulations.
 
 ```{r figure-03-06-data}
 n = 300 # number of observations
@@ -144,8 +146,6 @@ for (k in 1:K) {
 }
 ```
 
-## Figure 3-6 comparison of subset techniques
-
 ```{r figure-03-06-subset-techniques, fig.asp=.8}
 df.plot = data.frame(k = 1:31,
   BestSubset = colMeans(bestsub.mse.matrix),
@@ -162,5 +162,6 @@ According to the book the plot should show the "mean-squared error of the estima
 $\beta_k$ at each step from the true $\beta$", but the results are not reproduced here.
 I do not know yet where my approach differs.
 
+# Shrinkage Methods
 
 # Links

@@ -4,12 +4,13 @@ Bodo Burger
 2018-05
 
 -   [Linear Regression Models](#linear-regression-models)
-    -   [Figure 3-3 tail probabilities](#figure-3-3-tail-probabilities)
-    -   [Table 3-1](#table-3-1)
-    -   [Table 3-2](#table-3-2)
+    -   [Figure 3-3 Tail probabilities](#figure-3-3-tail-probabilities)
+    -   [Table 3-1 Prostate data correlations](#table-3-1-prostate-data-correlations)
+    -   [Table 3-2 Prostate data linear model](#table-3-2-prostate-data-linear-model)
 -   [Subset Selection](#subset-selection)
-    -   [Figure 3-5 all subset models for prostate cancer example](#figure-3-5-all-subset-models-for-prostate-cancer-example)
-    -   [Figure 3-6 comparison of subset techniques](#figure-3-6-comparison-of-subset-techniques)
+    -   [Figure 3-5 All subset models for prostate cancer example](#figure-3-5-all-subset-models-for-prostate-cancer-example)
+    -   [Figure 3-6 Comparison of subset techniques](#figure-3-6-comparison-of-subset-techniques)
+-   [Shrinkage Methods](#shrinkage-methods)
 -   [Links](#links)
 
 ``` r
@@ -26,7 +27,7 @@ cbbPalette = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
 Linear Regression Models
 ========================
 
-Figure 3-3 tail probabilities
+Figure 3-3 Tail probabilities
 -----------------------------
 
 ``` r
@@ -42,8 +43,8 @@ abline(v = qnorm(c(.975, .995)), lty = 2, lwd = .5, col = "aquamarine3")
 
 ![](figures/figure-03-03-tail-probabilities-1.png)
 
-Table 3-1
----------
+Table 3-1 Prostate data correlations
+------------------------------------
 
 ``` r
 prostate.data = ElemStatLearn::prostate
@@ -62,8 +63,8 @@ knitr::kable(prostate.cor[-1, -8])
 | gleason | 0.426  | 0.024   | 0.366 | 0.033  | 0.307 | 0.476 |         |
 | pgg45   | 0.483  | 0.074   | 0.276 | -0.03  | 0.481 | 0.663 | 0.757   |
 
-Table 3-2
----------
+Table 3-2 Prostate data linear model
+------------------------------------
 
 ``` r
 #prostate.data$svi = factor(prostate.data$svi) 
@@ -93,6 +94,9 @@ To reproduce exactly the results from the book we need to standardize all predic
 Subset Selection
 ================
 
+Figure 3-5 All subset models for prostate cancer example
+--------------------------------------------------------
+
 The dataset has 8 features. The number of combination for subset size k is $\\binom{8}{k}$; for *k* = 4 we reach the maximum number of combinations $\\binom{8}{4} = 70$, so if we set `nbest = 70` we store each possible combination of the feature set.
 
 ``` r
@@ -105,9 +109,6 @@ prostate.intercept.model = lm(lpsa ~ 1, data = train.data)
 prostate.models.best.rss = c(sum(residuals(prostate.intercept.model)^2), prostate.models.best.rss)
 ```
 
-Figure 3-5 all subset models for prostate cancer example
---------------------------------------------------------
-
 ``` r
 ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
   geom_point(mapping = aes(x = prostate.models.size, y = prostate.models.rss), col = "slategray") + 
@@ -117,7 +118,10 @@ ggplot(mapping = aes(x = 0:8, y = prostate.models.best.rss)) +
 
 ![](figures/figure-03-05-subset-models-1.png)
 
-The data generating process for Figure 3.6 is described in its subtitle in the book. The estimates are are averaged over several simulations.
+Figure 3-6 Comparison of subset techniques
+------------------------------------------
+
+The data generating process for Figure 3.6 is described in its subtitle. The estimates are averaged over several simulations.
 
 ``` r
 n = 300 # number of observations
@@ -178,9 +182,6 @@ for (k in 1:K) {
 }
 ```
 
-Figure 3-6 comparison of subset techniques
-------------------------------------------
-
 ``` r
 df.plot = data.frame(k = 1:31,
   BestSubset = colMeans(bestsub.mse.matrix),
@@ -196,6 +197,9 @@ ggplot(data = df.plot, mapping = aes(x = k, y = MSE, color = Method)) +
 ![](figures/figure-03-06-subset-techniques-1.png)
 
 According to the book the plot should show the "mean-squared error of the estimated coefficient *β*<sub>*k*</sub> at each step from the true *β*", but the results are not reproduced here. I do not know yet where my approach differs.
+
+Shrinkage Methods
+=================
 
 Links
 =====
