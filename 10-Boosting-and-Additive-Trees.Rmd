@@ -8,8 +8,8 @@ output:
 ---
 
 ```{r setup, message=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      message = FALSE,
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      cache = TRUE, cache.path = "cache/chapter10/",
                       fig.path = "figures/")
 set.seed(123)
 library("mlr")
@@ -29,6 +29,144 @@ library("ggplot2")
 
 ```
 
+```{r spam-data, eval=FALSE}
+options(device = "X11") # plots in external window (ubuntu)
+library(gbm)
+library(mlr)
+library(reshape2)
+
+#######################%
+# helper functions ####
+fitGbm = function(traindata, target.name, n.trees = 100, interaction.depth = 1, shrinkage = 0.001) {
+  formula.gbm = formula(paste0(target.name, " ~ ."))
+  gbm(formula.gbm, data = traindata, distribution = "bernoulli", n.trees = n.trees,
+      train.fraction = 1, interaction.depth = interaction.depth, shrinkage = shrinkage,
+      verbose = FALSE
+  )
+}
+
+getPrediction = function(model, testdata, n.trees) {
+  pred = predict(model, newdata = testdata, n.trees = n.trees, type = "response")
+  pred = as.numeric(pred > 0.5)
+  return(pred)
+}
+
+getError = function(model, testdata, target.name, n.trees = "full", return.accuracy = FALSE) {
+  if (n.trees == "full") n.trees = model$n.trees
+  pred = getPrediction(model, testdata, n.trees)
+  err = mean(pred != testdata[target.name])
+  return(if (return.accuracy) 1-err else err)
+}
+
+# plots grid of 4 partial dependency plots
+plot4Pdps = function(model, i.vars) {
+  par(mfrow = c(2,2))
+  plot(model, i.var = i.vars[1], col = "green", xlim = c(0,2))
+  plot(model, i.var = i.vars[2], col = "green", xlim = c(0,2))
+  plot(model, i.var = i.vars[3], col = "green")
+  plot(model, i.var = i.vars[4], col = "green")
+}
+
+# histogram plot function for pairs plot
+# you cannot use hist() because it creates its own plot
+panel.hist = function(x, ...) {
+  usr = par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h = hist(x, plot = FALSE)
+  breaks = h$breaks; nB <- length(breaks)
+  y = h$counts; y = y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+###########################################################%
+
+############################%
+# spam data preparation ####
+data("spam", package = "kernlab")
+
+str(spam)
+data.frame(levels = unique(spam$type), value = as.numeric(unique(spam$type)))
+spam$type = as.numeric(spam$type) - 1
+
+# train / test split
+train.sample = sort(sample(nrow(spam), size = 3065, replace = FALSE))
+df.train = spam[train.sample, ]
+df.test = spam[-train.sample, ]
+mean(df.train$type)
+mean(df.test$type)
+
+pairs(df.train[, c("charExclamation", "charDollar", "remove", "free", "hp", "capitalAve",
+                   "your", "capitalLong")], diag.panel = panel.hist, upper.panel = NULL)
+# Hastie proposes transformation of the predictors: log(. + .1)
+df.train.trafo = data.frame(lapply(df.train[,-58], function(x) log(x + .1)), type = df.train$type)
+df.test.trafo = data.frame(lapply(df.test[,-58], function(x) log(x + .1)), type = df.test$type)
+
+#############################################################%
+
+####################################%
+# fit gradient boosting machine ####
+
+fit.gbm = gbm(type ~ ., data = df.train.trafo, distribution = "bernoulli", n.trees = 5000, verbose = TRUE)
+summary(fit.gbm, cBars = 10, plotit = FALSE) # plot not usefull with long var names
+getError(fit.gbm, df.test.trafo, target.name = "type", n.trees = 5000, return.accuracy = FALSE)
+
+ind = seq(1, 5000, length.out = 100)
+plot(ind, sapply(ind, function(x) getError(fit.gbm, df.test.trafo, target.name = "type", n.trees = x,
+                                           return.accuracy = TRUE)),
+     type = "l", xlab = "number of iterations", ylab = "accuracy")
+
+# Figure 10.7, EoSL
+plot4Pdps(fit.gbm, c("charExclamation", "remove", "edu", "hp"))
+
+# Figure 10.8, EoSL
+grid = plot(fit.gbm, c("hp", "charExclamation"), return.grid = TRUE)
+
+z = acast(grid, hp ~ charExclamation, value.var = "y")
+
+hp = as.numeric(dimnames(z)[[1]])
+charExclamation = as.numeric(dimnames(z)[[2]])
+
+persp(x = hp, y = charExclamation, z = z, theta = 45)
+
+library(plotly)
+plot_ly(z = ~ z) %>% add_surface()
+
+library(rgl)
+open3d()
+surface3d(hp, charExclamation, z, color = col, back = "lines")
+#wire3d()
+
+
+
+library(lattice)
+wireframe(z)
+
+
+
+#####################################################%
+# Using mlr ####
+tsk = makeClassifTask(data = data.frame(df.train[-58], type = as.factor(df.train$type)), target = "type", positive = 1)
+getTaskDesc(tsk)
+
+lrn.log = makeLearner("classif.logreg", predict.type = "prob")
+lrn.gbm = makeLearner("classif.gbm", predict.type = "prob", n.trees = 20000, distribution = "bernoulli")
+
+mod.log = train(lrn.log, tsk)
+mod.gbm = train(lrn.gbm, tsk)
+
+pred.log = predict(mod.log, newdata = df.test)
+pred.gbm = predict(mod.gbm, newdata = df.test)
+listMeasures(tsk)
+performance(pred.log, measures = list(acc, mmce))
+performance(pred.gbm, measures = list(acc, mmce))
+
+#########################################################################################################%
+# Generalized additive model from Chapter ####
+#library(gam)
+# formula.gam = formula(paste0("type ~ ", paste0("s(",names(df.train)[-58],', df=4)', collapse = " + ")))
+# fit.gam = gam(formula.gam, data = df.train.trafo, family = binomial(link = logit))
+# summary(fit.gam)
+# predict(fit.gam, newdata = df.test.trafo, type = "")
+```
 
 
 # Sources
