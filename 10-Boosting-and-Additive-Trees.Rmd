@@ -166,7 +166,43 @@ performance(pred.gbm, measures = list(acc, mmce))
 # fit.gam = gam(formula.gam, data = df.train.trafo, family = binomial(link = logit))
 # summary(fit.gam)
 # predict(fit.gam, newdata = df.test.trafo, type = "")
-```
 
+
+# Illustration from Elements of Statistical Learning
+# 10.14.1 California Housing
+library(gbm)
+library(readr)
+
+df.org = read_csv("~/hidrive/Datasets/CaliforniaHousing/cal_housing.data")
+population = df.org$population
+households = df.org$households
+df = data.frame(
+  # target: median house value in the neighborhood
+  HouseValue = df.org$medianHouseValue,
+  # features:
+  Population = population,
+  MedInc = df.org$medianIncoe,
+  Latitude = df.org$latitude,
+  Longitude = df.org$longitude,
+  AveOccup = population / households,
+  AveRooms = df.org$totalRooms / households,
+  AveBedrms = df.org$totalBedroms / households,
+  HouseAge = df.org$housingMedianAge
+)
+
+fit = gbm(formula = HouseValue ~ ., data = df, shrinkage = .1)
+summary(fit)
+# recreating Figure 10.15
+par(mfrow=c(2,2))
+plot(fit, i.var = "MedInc", col = "green")
+plot(fit, i.var = "AveOccup", col = "green")
+plot(fit, i.var = "HouseAge", col = "green")
+plot(fit, i.var = "AveRooms", col = "green")
+
+plot(fit, i.var = c("AveOccup", "HouseAge"))
+
+# mit MLR
+tsk = makeRegrTask(data = df, target = "HouseValue")
+```
 
 # Sources
