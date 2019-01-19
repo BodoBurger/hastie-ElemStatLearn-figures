@@ -14,16 +14,168 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE,
 set.seed(123)
 library("mlr")
 library("ggplot2")
+theme_set(theme_light())
 ```
 
-# Gradient Boosting Machine
+## Boosting methods
 
+### AdaBoost.M1 implementation
 
-```{r spam data}
+We start by implementing the AdaBoost.M1 (discrete AdaBoost):
 
+```{r algorithm-10-01-adaboost-m1}
+#' Train AdaBoost.M1 model
+#'
+#' @param data data.frame Training dataset
+#'        target variable needs to be in (1,-1)-coding as.factor
+#' @param target character Name of the target variable
+#' @param weak_learner A model training function
+#' @param pred_fun Prediction function for the weak learner
+#' @param M Number of boosting iterations
+#'
+#' @return Model object (list)
+adaboost_m1_train = function(data, target, weak_learner,
+    pred_fun = function(object, newdata) predict(object, newdata), 
+    M = 200, ...) {
+  alpha = numeric(M)
+  n = nrow(data)
+  w = rep(1/n, n)
+  models = vector("list", M)
+  for(m in 1:M) {
+    models[[m]] = weak_learner(data, target, weights = w, ...)
+    predictions.m = pred_fun(models[[m]], data)
+    ind.miss = data[, target] != predictions.m
+    err.m = sum(w * ind.miss) / sum(w)
+    alpha[m] = log((1 - err.m) / err.m)
+    w = w * exp(alpha[m] * ind.miss)
+  }
+  return(list(models = models, alpha = alpha))
+}
+
+#' Prediction function for AdaBoost.M1
+#'
+#' @param object Object created by adaboost_m1_train()
+#' @param newdata data.frame
+#'
+#' @return Predictions
+adaboost_m1_predict = function(object, newdata) {
+  models = object$models
+  alpha = object$alpha
+  M = length(alpha)
+  n = nrow(newdata)
+  predictions = matrix(nrow=M, ncol=n)
+  for (m in 1:M) {
+    tmp.m = pred_weak_learner(models[[m]], newdata)
+    predictions[m, ] = alpha[m] * as.numeric(levels(tmp.m))[tmp.m]
+  }
+  return(sign(colSums(predictions)))
+}
+
+#' Extract a model with M iterations from an AdaBoost.M1 object
+adaboost_return_partial_model = function(object, M) {
+  models = object$models[1:M]
+  alpha = object$alpha[1:M]
+  return(list(models = models, alpha = alpha))
+}
+
+#' Examplary weak learner: tree stump (rpart with maxdepth = 1)
+weak_learner = function(data, target, weights = NULL, subset = NULL, maxdepth=1) {
+  mod.stump = rpart::rpart(formula(paste0(target, "~ .")),
+    data, weights = weights, subset = subset, control = 
+    rpart::rpart.control(maxdepth=maxdepth, cp=-1, minsplit=1, minbucket=1, xval=0))
+  return(mod.stump)
+}
+#' Prediction function for the tree stump
+pred_weak_learner = function(object, newdata) predict(object, newdata, type = "class")
+#' Predict random guesses
+pred_random = function(object = NULL, newdata) {
+  n = nrow(newdata)
+  return(sample(c(-1,1), n, replace=TRUE))
+}
+
+calculate_test_error = function(model, data.test, target, pred_fun =
+    function(object, newdata) predict(object, newdata)) {
+  predictions = pred_fun(model, data.test)
+  return(mean(predictions != data.test[,target]))
+}
+```
+
+Now we replicate the simulation (pp. 339/340).
+
+```{r simulation}
+generate_data = function(n = 12000, d = 10) {
+  X = replicate(d, rnorm(n))
+  y = factor(ifelse(rowSums(X^2) > 9.34, 1, -1))
+  return(data.frame(X, y))
+}
+sim.data = generate_data()
+test.indices = rep(FALSE, nrow(sim.data)); test.indices[2001:nrow(sim.data)] = TRUE
+fit.stump = weak_learner(sim.data, "y", subset = !test.indices)
+fit.tree = rpart::rpart(y ~ ., sim.data, subset = !test.indices)
+calculate_test_error(fit.stump, sim.data[test.indices, ], "y", pred_fun = pred_weak_learner)
+calculate_test_error(0, sim.data[test.indices, ], "y", pred_fun = pred_random) # random guess
+calculate_test_error(fit.tree, sim.data[test.indices, ], "y", pred_fun = pred_weak_learner)
+```
+
+After generating the data, we first fit a tree stump and calculate the test error. 
+We can see that the weak classifier is slightly better than random guessing
+(because the dataset is balanced it should be around 0.5).
+Fitting a tree with default settings yields a test error of $0.253$.
+
+### Figure 10-2 AdaBoost
+
+To replicate figure 10.2 we train a model using our implementation and 400 boosting iterations.
+
+```{r figure-10-02-adaboost}
+fit.ada = adaboost_m1_train(sim.data[!test.indices, ], "y", weak_learner = weak_learner,
+  pred_fun = pred_weak_learner, M = 400, maxdepth = 2)
+calculate_test_error(fit.ada, sim.data[test.indices,], "y", pred_fun = adaboost_m1_predict)
+
+# extract test error for different number of boosting iterations:
+iterations.seq = c(1, seq(20, 400, 10))
+test.errors = numeric(length(iterations.seq))
+for (i in seq_along(iterations.seq)) {
+  partial.fit = adaboost_return_partial_model(fit.ada, iterations.seq[i])
+  test.errors[i] = calculate_test_error(partial.fit, sim.data[test.indices,], "y",
+    pred_fun = adaboost_m1_predict)
+}
+
+ggplot(data = data.frame(i = iterations.seq, y = test.errors), aes(x = i, y = y)) +
+  geom_line(color = "orange") + ylim(0, .5) +
+  xlab("Boosting iterations") + ylab("Test error")
+```
+
+To get below a test error of $0.1$ (like in the book) we set the parameter maxdepth = 2.
+The test error decreases substantially compared to the training of a single, deep tree.
+
+```{r figure-10-02-mlr, eval=FALSE, include=FALSE}
+# double-check with mlr
+lrn = makeLearner("classif.boosting", maxdepth = 1, boos = FALSE, mfinal = 400, coeflearn = "Freund")
+tsk = makeClassifTask(data = sim.data[!test.set,], target = "y")
+mod = train(lrn, tsk)
+
+performance(predict(mod, newdata = sim.data[test.set,]), measures = list(mmce))
+
+pred_adabag = function(object, data) {
+  adabag.predict = predict(object, data)
+  return(as.factor(adabag.predict$class))
+}
+calculate_test_error(mod$learner.model, sim.data[test.set,], "y",
+  pred_fun = pred_adabag)
+
+rin = makeFixedHoldoutInstance(train.inds = 1:200, test.inds = 201:n, size = n) # defining a resampling instance
+
+mfinal = c(1, seq(20, 200, 20))
+ps = makeParamSet(makeDiscreteParam("mfinal", mfinal))
+# mmceTrainMean = setAggregation(mmce, train.mean) # delete
+models = tuneParams(lrn, tsk, resampling = rin, par.set = ps,
+                    measures = list(mmce), control = makeTuneControlGrid())
 ```
 
 
+## Gradient Boosting Machine
+
+*work in progress*
 
 ```{r figure-10-6-var-importance}
 
@@ -205,4 +357,4 @@ plot(fit, i.var = c("AveOccup", "HouseAge"))
 tsk = makeRegrTask(data = df, target = "HouseValue")
 ```
 
-# Sources
+## Sources

@@ -3,20 +3,348 @@ Chapter 10: Boosting and Additive Trees
 Bodo Burger
 2018-05
 
+-   [Boosting methods](#boosting-methods)
+    -   [AdaBoost.M1 implementation](#adaboost.m1-implementation)
+    -   [Figure 10-2 AdaBoost](#figure-10-2-adaboost)
 -   [Gradient Boosting Machine](#gradient-boosting-machine)
 -   [Sources](#sources)
 
 ``` r
-knitr::opts_chunk$set(echo = TRUE,
-                      message = FALSE,
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      cache = TRUE, cache.path = "cache/chapter10/",
                       fig.path = "figures/")
 set.seed(123)
 library("mlr")
 library("ggplot2")
+theme_set(theme_light())
 ```
 
+Boosting methods
+----------------
+
+### AdaBoost.M1 implementation
+
+We start by implementing the AdaBoost.M1 (discrete AdaBoost):
+
+``` r
+#' Train AdaBoost.M1 model
+#'
+#' @param data data.frame Training dataset
+#'        target variable needs to be in (1,-1)-coding as.factor
+#' @param target character Name of the target variable
+#' @param weak_learner A model training function
+#' @param pred_fun Prediction function for the weak learner
+#' @param M Number of boosting iterations
+#'
+#' @return Model object (list)
+adaboost_m1_train = function(data, target, weak_learner,
+    pred_fun = function(object, newdata) predict(object, newdata), 
+    M = 200, ...) {
+  alpha = numeric(M)
+  n = nrow(data)
+  w = rep(1/n, n)
+  models = vector("list", M)
+  for(m in 1:M) {
+    models[[m]] = weak_learner(data, target, weights = w, ...)
+    predictions.m = pred_fun(models[[m]], data)
+    ind.miss = data[, target] != predictions.m
+    err.m = sum(w * ind.miss) / sum(w)
+    alpha[m] = log((1 - err.m) / err.m)
+    w = w * exp(alpha[m] * ind.miss)
+  }
+  return(list(models = models, alpha = alpha))
+}
+
+#' Prediction function for AdaBoost.M1
+#'
+#' @param object Object created by adaboost_m1_train()
+#' @param newdata data.frame
+#'
+#' @return Predictions
+adaboost_m1_predict = function(object, newdata) {
+  models = object$models
+  alpha = object$alpha
+  M = length(alpha)
+  n = nrow(newdata)
+  predictions = matrix(nrow=M, ncol=n)
+  for (m in 1:M) {
+    tmp.m = pred_weak_learner(models[[m]], newdata)
+    predictions[m, ] = alpha[m] * as.numeric(levels(tmp.m))[tmp.m]
+  }
+  return(sign(colSums(predictions)))
+}
+
+#' Extract a model with M iterations from an AdaBoost.M1 object
+adaboost_return_partial_model = function(object, M) {
+  models = object$models[1:M]
+  alpha = object$alpha[1:M]
+  return(list(models = models, alpha = alpha))
+}
+
+#' Examplary weak learner: tree stump (rpart with maxdepth = 1)
+weak_learner = function(data, target, weights = NULL, subset = NULL, maxdepth=1) {
+  mod.stump = rpart::rpart(formula(paste0(target, "~ .")),
+    data, weights = weights, subset = subset, control = 
+    rpart::rpart.control(maxdepth=maxdepth, cp=-1, minsplit=1, minbucket=1, xval=0))
+  return(mod.stump)
+}
+#' Prediction function for the tree stump
+pred_weak_learner = function(object, newdata) predict(object, newdata, type = "class")
+#' Predict random guesses
+pred_random = function(object = NULL, newdata) {
+  n = nrow(newdata)
+  return(sample(c(-1,1), n, replace=TRUE))
+}
+
+calculate_test_error = function(model, data.test, target, pred_fun =
+    function(object, newdata) predict(object, newdata)) {
+  predictions = pred_fun(model, data.test)
+  return(mean(predictions != data.test[,target]))
+}
+```
+
+Now we replicate the simulation (pp. 339/340).
+
+``` r
+generate_data = function(n = 12000, d = 10) {
+  X = replicate(d, rnorm(n))
+  y = factor(ifelse(rowSums(X^2) > 9.34, 1, -1))
+  return(data.frame(X, y))
+}
+sim.data = generate_data()
+test.indices = rep(FALSE, nrow(sim.data)); test.indices[2001:nrow(sim.data)] = TRUE
+fit.stump = weak_learner(sim.data, "y", subset = !test.indices)
+fit.tree = rpart::rpart(y ~ ., sim.data, subset = !test.indices)
+calculate_test_error(fit.stump, sim.data[test.indices, ], "y", pred_fun = pred_weak_learner)
+```
+
+    ## [1] 0.4604
+
+``` r
+calculate_test_error(0, sim.data[test.indices, ], "y", pred_fun = pred_random) # random guess
+```
+
+    ## [1] 0.496
+
+``` r
+calculate_test_error(fit.tree, sim.data[test.indices, ], "y", pred_fun = pred_weak_learner)
+```
+
+    ## [1] 0.253
+
+After generating the data, we first fit a tree stump and calculate the test error. We can see that the weak classifier is slightly better than random guessing (because the dataset is balanced it should be around 0.5). Fitting a tree with default settings yields a test error of 0.253.
+
+### Figure 10-2 AdaBoost
+
+To replicate figure 10.2 we train a model using our implementation and 400 boosting iterations.
+
+``` r
+fit.ada = adaboost_m1_train(sim.data[!test.indices, ], "y", weak_learner = weak_learner,
+  pred_fun = pred_weak_learner, M = 400, maxdepth = 2)
+calculate_test_error(fit.ada, sim.data[test.indices,], "y", pred_fun = adaboost_m1_predict)
+```
+
+    ## [1] 0.0714
+
+``` r
+# extract test error for different number of boosting iterations:
+iterations.seq = c(1, seq(20, 400, 10))
+test.errors = numeric(length(iterations.seq))
+for (i in seq_along(iterations.seq)) {
+  partial.fit = adaboost_return_partial_model(fit.ada, iterations.seq[i])
+  test.errors[i] = calculate_test_error(partial.fit, sim.data[test.indices,], "y",
+    pred_fun = adaboost_m1_predict)
+}
+
+ggplot(data = data.frame(i = iterations.seq, y = test.errors), aes(x = i, y = y)) +
+  geom_line(color = "orange") + ylim(0, .5) +
+  xlab("Boosting iterations") + ylab("Test error")
+```
+
+![](figures/figure-10-02-adaboost-1.png)
+
+To get below a test error of 0.1 (like in the book) we set the parameter maxdepth = 2. The test error decreases substantially compared to the training of a single, deep tree.
+
 Gradient Boosting Machine
-=========================
+-------------------------
+
+*work in progress*
+
+``` r
+options(device = "X11") # plots in external window (ubuntu)
+library(gbm)
+library(mlr)
+library(reshape2)
+
+#######################%
+# helper functions ####
+fitGbm = function(traindata, target.name, n.trees = 100, interaction.depth = 1, shrinkage = 0.001) {
+  formula.gbm = formula(paste0(target.name, " ~ ."))
+  gbm(formula.gbm, data = traindata, distribution = "bernoulli", n.trees = n.trees,
+      train.fraction = 1, interaction.depth = interaction.depth, shrinkage = shrinkage,
+      verbose = FALSE
+  )
+}
+
+getPrediction = function(model, testdata, n.trees) {
+  pred = predict(model, newdata = testdata, n.trees = n.trees, type = "response")
+  pred = as.numeric(pred > 0.5)
+  return(pred)
+}
+
+getError = function(model, testdata, target.name, n.trees = "full", return.accuracy = FALSE) {
+  if (n.trees == "full") n.trees = model$n.trees
+  pred = getPrediction(model, testdata, n.trees)
+  err = mean(pred != testdata[target.name])
+  return(if (return.accuracy) 1-err else err)
+}
+
+# plots grid of 4 partial dependency plots
+plot4Pdps = function(model, i.vars) {
+  par(mfrow = c(2,2))
+  plot(model, i.var = i.vars[1], col = "green", xlim = c(0,2))
+  plot(model, i.var = i.vars[2], col = "green", xlim = c(0,2))
+  plot(model, i.var = i.vars[3], col = "green")
+  plot(model, i.var = i.vars[4], col = "green")
+}
+
+# histogram plot function for pairs plot
+# you cannot use hist() because it creates its own plot
+panel.hist = function(x, ...) {
+  usr = par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h = hist(x, plot = FALSE)
+  breaks = h$breaks; nB <- length(breaks)
+  y = h$counts; y = y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+###########################################################%
+
+############################%
+# spam data preparation ####
+data("spam", package = "kernlab")
+
+str(spam)
+data.frame(levels = unique(spam$type), value = as.numeric(unique(spam$type)))
+spam$type = as.numeric(spam$type) - 1
+
+# train / test split
+train.sample = sort(sample(nrow(spam), size = 3065, replace = FALSE))
+df.train = spam[train.sample, ]
+df.test = spam[-train.sample, ]
+mean(df.train$type)
+mean(df.test$type)
+
+pairs(df.train[, c("charExclamation", "charDollar", "remove", "free", "hp", "capitalAve",
+                   "your", "capitalLong")], diag.panel = panel.hist, upper.panel = NULL)
+# Hastie proposes transformation of the predictors: log(. + .1)
+df.train.trafo = data.frame(lapply(df.train[,-58], function(x) log(x + .1)), type = df.train$type)
+df.test.trafo = data.frame(lapply(df.test[,-58], function(x) log(x + .1)), type = df.test$type)
+
+#############################################################%
+
+####################################%
+# fit gradient boosting machine ####
+
+fit.gbm = gbm(type ~ ., data = df.train.trafo, distribution = "bernoulli", n.trees = 5000, verbose = TRUE)
+summary(fit.gbm, cBars = 10, plotit = FALSE) # plot not usefull with long var names
+getError(fit.gbm, df.test.trafo, target.name = "type", n.trees = 5000, return.accuracy = FALSE)
+
+ind = seq(1, 5000, length.out = 100)
+plot(ind, sapply(ind, function(x) getError(fit.gbm, df.test.trafo, target.name = "type", n.trees = x,
+                                           return.accuracy = TRUE)),
+     type = "l", xlab = "number of iterations", ylab = "accuracy")
+
+# Figure 10.7, EoSL
+plot4Pdps(fit.gbm, c("charExclamation", "remove", "edu", "hp"))
+
+# Figure 10.8, EoSL
+grid = plot(fit.gbm, c("hp", "charExclamation"), return.grid = TRUE)
+
+z = acast(grid, hp ~ charExclamation, value.var = "y")
+
+hp = as.numeric(dimnames(z)[[1]])
+charExclamation = as.numeric(dimnames(z)[[2]])
+
+persp(x = hp, y = charExclamation, z = z, theta = 45)
+
+library(plotly)
+plot_ly(z = ~ z) %>% add_surface()
+
+library(rgl)
+open3d()
+surface3d(hp, charExclamation, z, color = col, back = "lines")
+#wire3d()
+
+
+
+library(lattice)
+wireframe(z)
+
+
+
+#####################################################%
+# Using mlr ####
+tsk = makeClassifTask(data = data.frame(df.train[-58], type = as.factor(df.train$type)), target = "type", positive = 1)
+getTaskDesc(tsk)
+
+lrn.log = makeLearner("classif.logreg", predict.type = "prob")
+lrn.gbm = makeLearner("classif.gbm", predict.type = "prob", n.trees = 20000, distribution = "bernoulli")
+
+mod.log = train(lrn.log, tsk)
+mod.gbm = train(lrn.gbm, tsk)
+
+pred.log = predict(mod.log, newdata = df.test)
+pred.gbm = predict(mod.gbm, newdata = df.test)
+listMeasures(tsk)
+performance(pred.log, measures = list(acc, mmce))
+performance(pred.gbm, measures = list(acc, mmce))
+
+#########################################################################################################%
+# Generalized additive model from Chapter ####
+#library(gam)
+# formula.gam = formula(paste0("type ~ ", paste0("s(",names(df.train)[-58],', df=4)', collapse = " + ")))
+# fit.gam = gam(formula.gam, data = df.train.trafo, family = binomial(link = logit))
+# summary(fit.gam)
+# predict(fit.gam, newdata = df.test.trafo, type = "")
+
+
+# Illustration from Elements of Statistical Learning
+# 10.14.1 California Housing
+library(gbm)
+library(readr)
+
+df.org = read_csv("~/hidrive/Datasets/CaliforniaHousing/cal_housing.data")
+population = df.org$population
+households = df.org$households
+df = data.frame(
+  # target: median house value in the neighborhood
+  HouseValue = df.org$medianHouseValue,
+  # features:
+  Population = population,
+  MedInc = df.org$medianIncoe,
+  Latitude = df.org$latitude,
+  Longitude = df.org$longitude,
+  AveOccup = population / households,
+  AveRooms = df.org$totalRooms / households,
+  AveBedrms = df.org$totalBedroms / households,
+  HouseAge = df.org$housingMedianAge
+)
+
+fit = gbm(formula = HouseValue ~ ., data = df, shrinkage = .1)
+summary(fit)
+# recreating Figure 10.15
+par(mfrow=c(2,2))
+plot(fit, i.var = "MedInc", col = "green")
+plot(fit, i.var = "AveOccup", col = "green")
+plot(fit, i.var = "HouseAge", col = "green")
+plot(fit, i.var = "AveRooms", col = "green")
+
+plot(fit, i.var = c("AveOccup", "HouseAge"))
+
+# mit MLR
+tsk = makeRegrTask(data = df, target = "HouseValue")
+```
 
 Sources
-=======
+-------
