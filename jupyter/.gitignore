@@ -1,0 +1,12 @@
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Jupyter runtime files
+jupyter_runtime/
+jupyterlab-workspaces/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
